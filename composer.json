@@ -1,0 +1,38 @@
+{
+    "name": "t3n/graphql-tools",
+    "description": "A PHP port of apollo graphQL-tools",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "",
+    "keywords": [
+        "graphql",
+        "graphql-tools"
+    ],
+    "require": {
+        "php": ">=7.2",
+        "webonyx/graphql-php": "dev-master",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "3.3.2",
+        "phpunit/phpunit": "^7.3",
+        "react/promise": "^2.7",
+        "doctrine/coding-standard": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "GraphQLTools\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GraphQLTools\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Torsten Blindert",
+            "email": "info@by-torsten.com"
+        }
+    ]
+}
