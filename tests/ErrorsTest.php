@@ -6,7 +6,6 @@ namespace GraphQLTools\Tests;
 
 use GraphQL\Error\Error;
 use GraphQL\Executor\ExecutionResult;
-use GraphQL\Type\Definition\ResolveInfo;
 use GraphQLTools\Stitching\Errors;
 use PHPUnit\Framework\TestCase;
 use function count;
@@ -45,7 +44,7 @@ class ErrorsTest extends TestCase
         );
 
         try {
-            Errors::checkResultAndHandleErrors($result, new ResolveInfo([]), 'responseKey');
+            Errors::checkResultAndHandleErrors($result, ResolveInfoHelper::createResolveInfo([]), 'responseKey');
         } catch (Error $e) {
             static::assertEquals($e->getMessage(), 'Test error');
             static::assertFalse(isset($e->getPrevious()->errors));
@@ -63,7 +62,7 @@ class ErrorsTest extends TestCase
         );
 
         try {
-            Errors::checkResultAndHandleErrors($result, new ResolveInfo([]), 'responseKey');
+            Errors::checkResultAndHandleErrors($result, ResolveInfoHelper::createResolveInfo([]), 'responseKey');
         } catch (Error $e) {
             static::assertEquals($e->getMessage(), 'Test error');
             static::assertEquals($e->getExtensions()['code'], 'UNAUTHENTICATED');
@@ -82,7 +81,7 @@ class ErrorsTest extends TestCase
         );
 
         try {
-            Errors::checkResultAndHandleErrors($result, new ResolveInfo([]), 'responseKey');
+            Errors::checkResultAndHandleErrors($result, ResolveInfoHelper::createResolveInfo([]), 'responseKey');
         } catch (Error $e) {
             static::assertEquals($e->getMessage(), 'Test error');
             $originalError = $e->getPrevious();
@@ -109,7 +108,7 @@ class ErrorsTest extends TestCase
         );
 
         try {
-            Errors::checkResultAndHandleErrors($result, new ResolveInfo([]), 'responseKey');
+            Errors::checkResultAndHandleErrors($result, ResolveInfoHelper::createResolveInfo([]), 'responseKey');
         } catch (Error $e) {
             static::assertEquals($e->getMessage(), 'Error1\nError2');
             $originalError = $e->getPrevious();

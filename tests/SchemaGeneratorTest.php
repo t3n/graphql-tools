@@ -13,7 +13,6 @@ use GraphQL\Language\AST\StringValueNode;
 use GraphQL\Language\Parser;
 use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Definition\EnumType;
-use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\ScalarType;
 use GraphQLTools\Generate\AddSchemaLevelResolveFunction;
 use GraphQLTools\Generate\AttachConnectorsToContext;
@@ -2408,7 +2407,7 @@ class SchemaGeneratorTest extends TestCase
 
         static::assertEquals(
             'tony',
-            $rChained(0, ['name' => 'tony'], null, new ResolveInfo(['fieldName' => 'person']))
+            $rChained(0, ['name' => 'tony'], null, ResolveInfoHelper::createResolveInfo(['fieldName' => 'person']))
         );
     }
 }

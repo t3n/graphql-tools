@@ -10,7 +10,7 @@
     ],
     "require": {
         "php": ">=7.2",
-        "webonyx/graphql-php": "dev-master",
+        "webonyx/graphql-php": "dev-master#d8d032f0f64d0ee20c953ccceda9ef8fa4790acd",
         "ext-json": "*"
     },
     "require-dev": {
