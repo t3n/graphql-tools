@@ -1,0 +1,12 @@
+language: php
+php:
+  - 7.2
+
+install:
+  - composer self-update -q
+  - composer install
+
+script:
+  - composer run test
+  - composer run lint
+  - composer run static-analysis
