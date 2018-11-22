@@ -6,9 +6,9 @@ namespace GraphQLTools\Tests\TransformsTest;
 
 use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
+use GraphQLTools\GraphQLTools;
 use GraphQLTools\Tests\TestingSchemas;
 use GraphQLTools\Transforms\RenameTypes;
-use GraphQLTools\Transforms\TransformSchema;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,7 +38,7 @@ class RenameTypeTest extends TestCase
         ),
         ];
 
-        $this->schema = TransformSchema::invoke(TestingSchemas::propertySchema(), $transforms);
+        $this->schema = GraphQLTools::transformSchema(TestingSchemas::propertySchema(), $transforms);
     }
 
     /**

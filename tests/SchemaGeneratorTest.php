@@ -14,7 +14,6 @@ use GraphQL\Language\Parser;
 use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\ScalarType;
-use GraphQLTools\Generate\AddSchemaLevelResolveFunction;
 use GraphQLTools\Generate\AttachConnectorsToContext;
 use GraphQLTools\Generate\ChainResolvers;
 use GraphQLTools\Generate\ConcatenateTypeDefs;
@@ -2029,7 +2028,7 @@ class SchemaGeneratorTest extends TestCase
             return ['species' => 'ROOT'];
         };
 
-        AddSchemaLevelResolveFunction::invoke($jsSchema, $rootResolver);
+        GraphQLTools::addSchemaLevelResolveFunction($jsSchema, $rootResolver);
 
         $query = '{
             species(name: "strix")
@@ -2053,7 +2052,7 @@ class SchemaGeneratorTest extends TestCase
             return ['stuff' => 'stuff'];
         };
 
-        AddSchemaLevelResolveFunction::invoke($jsSchema, $rootResolver);
+        GraphQLTools::addSchemaLevelResolveFunction($jsSchema, $rootResolver);
         $query = '{
             stuff
         }';
@@ -2104,7 +2103,7 @@ class SchemaGeneratorTest extends TestCase
             return ['stuff' => 'EEE', 'species' => 'EEE'];
         };
 
-        AddSchemaLevelResolveFunction::invoke($jsSchema, $rootResolver);
+        GraphQLTools::addSchemaLevelResolveFunction($jsSchema, $rootResolver);
         $query = '{
             species(name: "strix")
             stuff
@@ -2139,7 +2138,7 @@ class SchemaGeneratorTest extends TestCase
             $ctx->usecontext = 'ABC';
         };
 
-        AddSchemaLevelResolveFunction::invoke($jsSchema, $rootResolver);
+        GraphQLTools::addSchemaLevelResolveFunction($jsSchema, $rootResolver);
         $query    = '{
             usecontext
         }';
@@ -2304,7 +2303,7 @@ class SchemaGeneratorTest extends TestCase
             ];
         };
 
-        AddSchemaLevelResolveFunction::invoke($jsSchema, $rootResolver);
+        GraphQLTools::addSchemaLevelResolveFunction($jsSchema, $rootResolver);
         AttachConnectorsToContext::invoke($jsSchema, TestHelper::getTestConnectors());
 
         $query = '

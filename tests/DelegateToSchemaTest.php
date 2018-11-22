@@ -6,7 +6,6 @@ namespace GraphQLTools\Tests;
 
 use GraphQL\GraphQL;
 use GraphQLTools\GraphQLTools;
-use GraphQLTools\Stitching\DelegateToSchema;
 use PHPUnit\Framework\TestCase;
 
 class DelegateToSchemaTest extends TestCase
@@ -51,7 +50,7 @@ class DelegateToSchemaTest extends TestCase
                     'fragment' => '... on Booking { propertyId }',
                     'resolve' => static function ($booking, $args, $context, $info) use ($spec) {
                         $delegateFn = $spec === 'standalone' ? static function (...$args) {
-                            return DelegateToSchema::invoke(...$args);
+                            return GraphQLTools::delegateToSchema(...$args);
                         } : static function (...$args) use ($info) {
                             return $info->mergeInfo->delegateToSchema(...$args);
                         };

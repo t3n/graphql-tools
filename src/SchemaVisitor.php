@@ -260,7 +260,7 @@ class SchemaVisitor
         $visitFields = static function ($type) use ($callMethod) : void {
             $fields = $type->getFields();
             static::updateEachKey($fields, static function (FieldDefinition $field) use ($callMethod, $type) {
-                $newField =  $callMethod('visitFieldDefinition', $field, ['objectType' => $type]);
+                $newField = $callMethod('visitFieldDefinition', $field, ['objectType' => $type]);
 
                 if ($newField instanceof FieldDefinition) {
                     static::updateEachKey(
@@ -385,7 +385,7 @@ class SchemaVisitor
                 foreach ($type->getFields() as $field) {
                     Utils::forceSet($field, 'type', $healType($field->getType()));
                 }
-            // phpcs:ignore
+                // phpcs:ignore
             } elseif ($type instanceof ScalarType) {
                 // nothing to do
             } elseif ($type instanceof UnionType) {

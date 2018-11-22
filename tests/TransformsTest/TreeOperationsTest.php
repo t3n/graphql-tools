@@ -9,7 +9,6 @@ use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Type\Schema;
 use GraphQLTools\GraphQLTools;
-use GraphQLTools\Stitching\DelegateToSchema;
 use GraphQLTools\Transforms\ExtractField;
 use GraphQLTools\Transforms\WrapQuery;
 use PHPUnit\Framework\TestCase;
@@ -135,7 +134,7 @@ class TreeOperationsTest extends TestCase
                 'Query' => [
                     'addressByUser' => function ($parent, $args, $context, $info) {
                         $id = $args['id'];
-                        return DelegateToSchema::invoke([
+                        return GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'query',
                             'fieldName' => 'userById',
@@ -168,7 +167,7 @@ class TreeOperationsTest extends TestCase
                 'Mutation' => [
                     'setUserAndAddress' => function ($parent, $args, $context, $info) {
                         $input         = $args['input'];
-                        $addressResult = DelegateToSchema::invoke([
+                        $addressResult = GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'mutation',
                             'fieldName' => 'setAddress',
@@ -191,7 +190,7 @@ class TreeOperationsTest extends TestCase
                             ],
                         ]);
 
-                        $userResult = DelegateToSchema::invoke([
+                        $userResult = GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'mutation',
                             'fieldName' => 'setUser',

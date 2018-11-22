@@ -10,7 +10,6 @@ use GraphQL\Executor\Promise\Adapter\ReactPromiseAdapter;
 use GraphQL\GraphQL;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
-use GraphQLTools\Generate\AddResolveFunctionsToSchema;
 use GraphQLTools\GraphQLTools;
 use GraphQLTools\Mock;
 use GraphQLTools\SimpleLogger;
@@ -255,7 +254,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
@@ -379,7 +378,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
@@ -427,7 +426,7 @@ class MockingTest extends TestCase
     public function testCanMockUnions() : void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
-        AddResolveFunctionsToSchema::invoke($jsSchema, $this->resolveFunctions);
+        GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
         $mockMap = [
             'Int' => static function () {
                 return 10;
@@ -491,7 +490,7 @@ class MockingTest extends TestCase
     public function testCanMockInterfacesByDefault() : void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
-        AddResolveFunctionsToSchema::invoke($jsSchema, $this->resolveFunctions);
+        GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
         $mockMap = [
             'Int' => static function () {
                 return 10;
@@ -562,7 +561,7 @@ class MockingTest extends TestCase
     public function testCanSupportExplicitInterfaceMock() : void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
-        AddResolveFunctionsToSchema::invoke($jsSchema, $this->resolveFunctions);
+        GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
         $spy     = 0;
         $mockMap = [
             'Bird' => static function ($root, $args) {
@@ -620,7 +619,7 @@ class MockingTest extends TestCase
     public function testCanSupportExplicitUnionTypeMock() : void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
-        AddResolveFunctionsToSchema::invoke($jsSchema, $this->resolveFunctions);
+        GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
         $spy     = 0;
         $mockMap = [
 
@@ -679,7 +678,7 @@ class MockingTest extends TestCase
     public function testThrowsAnErrorWhenTypenameIsNotReturnedWithinAnExplicitInterfaceMock() : void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
-        AddResolveFunctionsToSchema::invoke($jsSchema, $this->resolveFunctions);
+        GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
         $mockMap = [
 
             'Bird' => static function ($root, $args) {
@@ -752,7 +751,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
@@ -798,7 +797,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
@@ -1084,7 +1083,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
@@ -1171,7 +1170,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
@@ -1229,7 +1228,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
@@ -1465,7 +1464,7 @@ class MockingTest extends TestCase
             ],
         ];
 
-        AddResolveFunctionsToSchema::invoke(
+        GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
             ['requireResolversForResolveType' => false]
