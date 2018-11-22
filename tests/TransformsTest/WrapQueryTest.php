@@ -12,7 +12,6 @@ use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Type\Schema;
 use GraphQLTools\GraphQLTools;
-use GraphQLTools\Stitching\DelegateToSchema;
 use GraphQLTools\Transforms\WrapQuery;
 use PHPUnit\Framework\TestCase;
 use function array_map;
@@ -77,7 +76,7 @@ class WrapQueryTest extends TestCase
                 'Query' => [
                     'addressByUser' => function ($parent, $args, $context, $info) {
                         $id = $args['id'];
-                        return DelegateToSchema::invoke([
+                        return GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'query',
                             'fieldName' => 'userById',

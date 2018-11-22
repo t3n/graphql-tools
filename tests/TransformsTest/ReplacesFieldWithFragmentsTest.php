@@ -7,7 +7,6 @@ namespace GraphQLTools\Tests\TransformsTest;
 use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
 use GraphQLTools\GraphQLTools;
-use GraphQLTools\Stitching\DelegateToSchema;
 use GraphQLTools\Transforms\ReplaceFieldWithFragment;
 use PHPUnit\Framework\TestCase;
 
@@ -70,7 +69,7 @@ class ReplacesFieldWithFragmentsTest extends TestCase
                 'Query' => [
                     'userById' => function ($parent, $args, $context, $info) {
                         $id = $args['id'];
-                        return DelegateToSchema::invoke([
+                        return GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'query',
                             'fieldName' => 'userById',

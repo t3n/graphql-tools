@@ -6,9 +6,9 @@ namespace GraphQLTools\Tests\TransformsTest;
 
 use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
+use GraphQLTools\GraphQLTools;
 use GraphQLTools\Tests\TestingSchemas;
 use GraphQLTools\Transforms\FilterTypes;
-use GraphQLTools\Transforms\TransformSchema;
 use PHPUnit\Framework\TestCase;
 use function in_array;
 
@@ -31,7 +31,7 @@ class FilterTypeTest extends TestCase
         ),
         ];
 
-        $this->schema = TransformSchema::invoke(TestingSchemas::bookingSchema(), $transforms);
+        $this->schema = GraphQLTools::transformSchema(TestingSchemas::bookingSchema(), $transforms);
     }
 
     /**
