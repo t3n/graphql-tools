@@ -14,11 +14,11 @@ use GraphQL\Language\AST\StringValueNode;
 use GraphQL\Language\AST\ValueNode;
 use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Schema;
+use GraphQLTools\GraphQLTools;
 use function array_filter;
 use function array_map;
 use function array_slice;
 use function array_values;
-use GraphQLTools\GraphQLTools;
 use function is_array;
 use function json_encode;
 

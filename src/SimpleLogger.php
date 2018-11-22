@@ -10,7 +10,7 @@ class SimpleLogger implements Logger
 {
     /** @var Throwable[] */
     public $errors;
-    /** @var null|string  */
+    /** @var string|null  */
     public $name;
     /** @var callable|null  */
     public $callback;

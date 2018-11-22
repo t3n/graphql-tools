@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GraphQL\Tests;
+namespace GraphQLTools\Tests;
 
 use GraphQL\Executor\ExecutionResult;
 use GraphQL\GraphQL;

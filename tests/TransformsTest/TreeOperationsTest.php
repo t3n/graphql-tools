@@ -150,10 +150,8 @@ class TreeOperationsTest extends TestCase
                                     static function ($subtree) {
                                         // we create a wrapping AST Field
                                         return new FieldNode([
-                                            'name' => new NameNode([
-                                                // that field is `address`
-                                                'value' => 'address',
-                                            ]),
+                                            // that field is `address`
+                                            'name' => new NameNode(['value' => 'address']),
                                             // Inside the field selection
                                             'selectionSet' => $subtree,
                                         ]);
