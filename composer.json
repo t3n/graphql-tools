@@ -39,6 +39,7 @@
         }
     ],
     "scripts": {
+        "test": "phpunit",
         "lint": "phpcs",
         "static-analysis": "phpstan analyse --ansi"
     }

@@ -126,7 +126,7 @@ class DelegateToSchema
         $originalSelections,
         array $fragments,
         $variables,
-        NameNode $operationName
+        ?NameNode $operationName
     ) : DocumentNode {
         $selections = [];
         $args       = [];
