@@ -11,7 +11,6 @@ use GraphQLTools\Utils;
 use function array_keys;
 use function array_map;
 use function array_merge;
-use function array_reverse;
 use function array_slice;
 use function count;
 use function implode;
@@ -127,7 +126,7 @@ class Errors
             $locatedError = Error::createLocatedError(
                 $newError,
                 $info->fieldNodes,
-                static::responsePathAsArray($info->path)
+                $info->path
             );
             throw $locatedError;
         }
@@ -139,23 +138,6 @@ class Errors
         }
 
         return $resultObject;
-    }
-
-    /**
-     * @param mixed[]|null $path
-     *
-     * @return mixed[]
-     */
-    public static function responsePathAsArray(?array $path) : array
-    {
-        $flattened = [];
-        $curr      = $path;
-        while ($curr) {
-            $flattened[] = $curr['key'];
-            $curr        = $curr['prev'];
-        }
-
-        return array_reverse($flattened);
     }
 
     /**
