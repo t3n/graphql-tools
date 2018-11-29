@@ -127,7 +127,7 @@ class Errors
             $locatedError = Error::createLocatedError(
                 $newError,
                 $info->fieldNodes,
-                static::responsePathAsArray($info->path)
+                $info->path
             );
             throw $locatedError;
         }
@@ -139,23 +139,6 @@ class Errors
         }
 
         return $resultObject;
-    }
-
-    /**
-     * @param mixed[]|null $path
-     *
-     * @return mixed[]
-     */
-    public static function responsePathAsArray(?array $path) : array
-    {
-        $flattened = [];
-        $curr      = $path;
-        while ($curr) {
-            $flattened[] = $curr['key'];
-            $curr        = $curr['prev'];
-        }
-
-        return array_reverse($flattened);
     }
 
     /**
