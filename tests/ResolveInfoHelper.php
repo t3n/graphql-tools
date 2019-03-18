@@ -20,12 +20,12 @@ class ResolveInfoHelper
             $options['fieldNodes'] ?? null,
             $options['returnType'] ?? null,
             $options['parentType'] ?? new ObjectType(['name' => 'dummy']),
-            $options['path'] ?? null,
+            $options['path'] ?? [],
             $options['schema'] ?? new Schema([]),
-            $options['fragments'] ?? null,
+            $options['fragments'] ?? [],
             $options['rootValue'] ?? null,
             $options['operation'] ?? null,
-            $options['variableValues'] ?? null
+            $options['variableValues'] ?? []
         );
     }
 }
