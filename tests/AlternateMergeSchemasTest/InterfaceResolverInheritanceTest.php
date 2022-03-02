@@ -114,7 +114,7 @@ class InterfaceResolverInheritanceTest extends TestCase
         $query    = '{ user { id name } }';
         $response = GraphQL::executeQuery($mergedSchema, $query);
         static::assertCount(1, $response->errors);
-        static::assertEquals('Cannot return null for non-nullable field User.id.', $response->errors[0]->getMessage());
+        static::assertEquals('Cannot return null for non-nullable field "User.id".', $response->errors[0]->getMessage());
         static::assertEquals(['user', 'id'], $response->errors[0]->getPath());
     }
 
@@ -136,7 +136,7 @@ class InterfaceResolverInheritanceTest extends TestCase
         $query    = '{ user { id name } }';
         $response = GraphQL::executeQuery($mergedSchema, $query);
         static::assertCount(1, $response->errors);
-        static::assertEquals('Cannot return null for non-nullable field User.id.', $response->errors[0]->getMessage());
+        static::assertEquals('Cannot return null for non-nullable field "User.id".', $response->errors[0]->getMessage());
         static::assertEquals(['user', 'id'], $response->errors[0]->getPath());
     }
 }
