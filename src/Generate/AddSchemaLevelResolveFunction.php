@@ -8,13 +8,14 @@ use GraphQL\Executor\Executor;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Schema;
+
 use function array_filter;
 use function mt_getrandmax;
 use function mt_rand;
 
 class AddSchemaLevelResolveFunction
 {
-    public static function invoke(Schema $schema, callable $fn) : void
+    public static function invoke(Schema $schema, callable $fn): void
     {
         /** @var ObjectType[] $rootTypes */
         $rootTypes = array_filter([
@@ -39,7 +40,7 @@ class AddSchemaLevelResolveFunction
         }
     }
 
-    protected static function wrapResolver(?callable $innerResolver, callable $outerResolver) : callable
+    protected static function wrapResolver(callable|null $innerResolver, callable $outerResolver): callable
     {
         return static function ($obj, $args, &$ctx, ResolveInfo $info) use ($innerResolver, $outerResolver) {
             $root = $outerResolver($obj, $args, $ctx, $info);
@@ -52,7 +53,7 @@ class AddSchemaLevelResolveFunction
         };
     }
 
-    protected static function runAtMostOncePerRequest(callable $fn) : callable
+    protected static function runAtMostOncePerRequest(callable $fn): callable
     {
         $value = null;
         // cast to string to all $randomNumber to be an array key

@@ -10,6 +10,8 @@ use GraphQL\Language\Parser;
 use GraphQL\Type\Schema;
 use GraphQL\Utils\BuildSchema;
 use GraphQL\Utils\SchemaExtender;
+
+use function assert;
 use function count;
 use function gettype;
 use function is_array;
@@ -18,10 +20,7 @@ use function property_exists;
 
 class BuildSchemaFromTypeDefinitions
 {
-    /**
-     * @param mixed $typeDefinitions
-     */
-    protected static function isDocumentNode($typeDefinitions) : bool
+    protected static function isDocumentNode(mixed $typeDefinitions): bool
     {
         return $typeDefinitions instanceof Node && property_exists($typeDefinitions, 'kind');
     }
@@ -30,19 +29,21 @@ class BuildSchemaFromTypeDefinitions
      * @param string|string[]|DocumentNode $typeDefinitions
      * @param mixed[]|null                 $parseOptions
      */
-    public static function invoke($typeDefinitions, ?array $parseOptions = null) : Schema
+    public static function invoke(string|array|DocumentNode $typeDefinitions, array|null $parseOptions = null): Schema
     {
         $myDefinitions = $typeDefinitions;
-        /** @var DocumentNode $astDocument */
-        $astDocument = null;
+        $astDocument   = null;
+        assert($astDocument instanceof DocumentNode);
 
         if (static::isDocumentNode($typeDefinitions)) {
             $astDocument = $typeDefinitions;
         } elseif (! is_string($myDefinitions)) {
             if (! is_array($myDefinitions)) {
                 $type = gettype($myDefinitions);
+
                 throw new SchemaError('typeDefs must be a string, array or schema AST, got ' . $type);
             }
+
             $myDefinitions = ConcatenateTypeDefs::invoke($myDefinitions);
         }
 
@@ -50,7 +51,7 @@ class BuildSchemaFromTypeDefinitions
             $astDocument = Parser::parse($myDefinitions, $parseOptions ?: []);
         }
 
-        $backcompatOptions = [ 'commentDescriptions' => true ];
+        $backcompatOptions = ['commentDescriptions' => true];
         $schema            = BuildSchema::buildAST($astDocument, null, $backcompatOptions);
 
         $extensionsAst = ExtractExtensionDefinitions::invoke($astDocument);

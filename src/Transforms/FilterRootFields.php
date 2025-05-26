@@ -8,8 +8,7 @@ use GraphQL\Type\Schema;
 
 class FilterRootFields implements Transform
 {
-    /** @var TransformRootFields  */
-    private $transformer;
+    private TransformRootFields $transformer;
 
     public function __construct(callable $filter)
     {
@@ -20,13 +19,14 @@ class FilterRootFields implements Transform
                 }
 
                 return false;
-            }
+            },
         );
     }
 
-    public function transformSchema(Schema $originalSchema) : Schema
+    public function transformSchema(Schema $originalSchema): Schema
     {
         $transformer = $this->transformer;
+
         return $transformer->transformSchema($originalSchema);
     }
 }

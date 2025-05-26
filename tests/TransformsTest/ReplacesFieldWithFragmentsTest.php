@@ -10,21 +10,18 @@ use GraphQLTools\GraphQLTools;
 use GraphQLTools\Transforms\ReplaceFieldWithFragment;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @see describe('replaces field with fragments')
- */
+/** @see describe('replaces field with fragments') */
 class ReplacesFieldWithFragmentsTest extends TestCase
 {
     /** @var mixed[] */
-    protected $data;
-    /** @var Schema */
-    protected $subSchema;
-    /** @var Schema */
-    protected $schema;
+    protected array $data;
+    protected Schema $subSchema;
+    protected Schema $schema;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
+
         $this->data = [
             'u1' => [
                 'id' => 'u1',
@@ -69,6 +66,7 @@ class ReplacesFieldWithFragmentsTest extends TestCase
                 'Query' => [
                     'userById' => function ($parent, $args, $context, $info) {
                         $id = $args['id'];
+
                         return GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'query',
@@ -76,19 +74,20 @@ class ReplacesFieldWithFragmentsTest extends TestCase
                             'args' => ['id' => $id],
                             'context' => $context,
                             'info' => $info,
-                            'transforms' => [new ReplaceFieldWithFragment(
-                                $this->subSchema,
-                                [
+                            'transforms' => [
+                                new ReplaceFieldWithFragment(
+                                    $this->subSchema,
                                     [
-                                        'field' => 'fullname',
-                                        'fragment' => 'fragment UserName on User { name }',
+                                        [
+                                            'field' => 'fullname',
+                                            'fragment' => 'fragment UserName on User { name }',
+                                        ],
+                                        [
+                                            'field' => 'fullname',
+                                            'fragment' => 'fragment UserSurname on User { surname }',
+                                        ],
                                     ],
-                                    [
-                                        'field' => 'fullname',
-                                        'fragment' => 'fragment UserSurname on User { surname }',
-                                    ],
-                                ]
-                            ),
+                                ),
                             ],
                         ]);
                     },
@@ -102,10 +101,8 @@ class ReplacesFieldWithFragmentsTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('should work')
-     */
-    public function testShouldWork() : void
+    /** @see it('should work') */
+    public function testShouldWork(): void
     {
         $result = GraphQL::executeQuery(
             $this->schema,
@@ -116,7 +113,7 @@ class ReplacesFieldWithFragmentsTest extends TestCase
                         fullname
                     }
                 }
-            '
+            ',
         );
 
         static::assertEquals(
@@ -128,7 +125,7 @@ class ReplacesFieldWithFragmentsTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 }

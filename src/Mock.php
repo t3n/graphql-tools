@@ -24,8 +24,10 @@ use GraphQLTools\Generate\BuildSchemaFromTypeDefinitions;
 use GraphQLTools\Generate\ForEachField;
 use GraphQLTools\Mock\MockList;
 use Throwable;
+
 use function array_map;
 use function array_merge;
+use function assert;
 use function count;
 use function is_array;
 use function is_callable;
@@ -41,7 +43,7 @@ class Mock
      * @param Schema|string|string[]|DocumentNode $schema
      * @param mixed[]                             $mocks
      */
-    public static function mockServer($schema, array $mocks, bool $preserveResolvers = false) : object
+    public static function mockServer(Schema|string|array|DocumentNode $schema, array $mocks, bool $preserveResolvers = false): object
     {
         $mySchema = null;
         if (! $schema instanceof Schema) {
@@ -57,18 +59,12 @@ class Mock
         ]);
 
         return new class ($mySchema) {
-            /** @var Schema */
-            private $schema;
-
-            public function __construct(Schema $schema)
+            public function __construct(private Schema $schema)
             {
-                $this->schema = $schema;
             }
 
-            /**
-             * @param mixed[] $variables
-             */
-            public function query(string $query, array $variables = []) : ExecutionResult
+            /** @param mixed[] $variables */
+            public function query(string $query, array $variables = []): ExecutionResult
             {
                 return GraphQL::executeQuery($this->schema, $query, [], [], $variables);
             }
@@ -76,14 +72,14 @@ class Mock
     }
 
     /** @var null object */
-    protected static $defaultMocks = null;
+    protected static null $defaultMocks = null;
 
-    protected static function getDefaultMockMap() : object
+    protected static function getDefaultMockMap(): object
     {
         if (static::$defaultMocks === null) {
             static::$defaultMocks = new class {
                 /** @var Closure[]  */
-                protected $mocks = [];
+                protected array $mocks = [];
 
                 public function __construct()
                 {
@@ -113,24 +109,20 @@ class Mock
                             mt_rand(0, 0x3fff) | 0x8000,
                             mt_rand(0, 0xffff),
                             mt_rand(0, 0xffff),
-                            mt_rand(0, 0xffff)
+                            mt_rand(0, 0xffff),
                         );
                     };
                 }
 
-                public function has(string $type) : bool
+                public function has(string $type): bool
                 {
                     return isset($this->mocks[$type]);
                 }
 
-                /**
-                 * @param mixed ...$args
-                 *
-                 * @return mixed
-                 */
-                public function __invoke(string $type, ...$args)
+                public function __invoke(string $type, mixed ...$args): mixed
                 {
                     $mock = $this->mocks[$type];
+
                     return $mock();
                 }
             };
@@ -139,10 +131,8 @@ class Mock
         return static::$defaultMocks;
     }
 
-    /**
-     * @param mixed[] $options
-     */
-    public static function addMockFunctionsToSchema(array $options) : void
+    /** @param mixed[] $options */
+    public static function addMockFunctionsToSchema(array $options): void
     {
         $schema            = $options['schema'] ?? null;
         $mocks             = $options['mocks'] ?? [];
@@ -168,33 +158,35 @@ class Mock
 
         $mockType = static function (
             Type $type,
-            ?string $typeName = null,
-            ?string $fieldName = null
+            string|null $typeName = null,
+            string|null $fieldName = null,
         ) use (
             &$mockType,
             $mocks,
-            $schema
-        ) : Closure {
+            $schema,
+        ): Closure {
             return static function (
                 $root,
                 $args,
                 $context,
-                ResolveInfo $info
+                ResolveInfo $info,
             ) use (
                 $type,
                 $fieldName,
                 &$mockType,
                 $mocks,
-                $schema
+                $schema,
             ) {
                 $fieldType      = Type::getNullableType($type);
                 $namedFieldType = Type::getNamedType($fieldType);
 
-                if ($root
+                if (
+                    $root
                     && (
                         (is_array($root) && isset($root[$fieldName]))
                         || ((is_object($root) && isset($root->{$fieldName})))
-                    )) {
+                    )
+                ) {
                     $result = null;
 
                     $field = is_array($root) ? $root[$fieldName] : $root->{$fieldName};
@@ -209,7 +201,7 @@ class Mock
                                 $context,
                                 $info,
                                 $fieldType,
-                                $mockType
+                                $mockType,
                             );
                         }
                     } else {
@@ -221,7 +213,7 @@ class Mock
                             static function () use ($mocks, $namedFieldType, $root, $args, $context, $info) {
                                 return $mocks[$namedFieldType->name]($root, $args, $context, $info);
                             },
-                            $result
+                            $result,
                         );
                     }
 
@@ -235,7 +227,8 @@ class Mock
                     ];
                 }
 
-                if (isset($mocks[$fieldType->name]) &&
+                if (
+                    isset($mocks[$fieldType->name]) &&
                     ! ($fieldType instanceof UnionType || $fieldType instanceof InterfaceType)
                 ) {
                     return $mocks[$fieldType->name]($root, $args, $context, $info);
@@ -246,13 +239,14 @@ class Mock
                 }
 
                 if ($fieldType instanceof UnionType || $fieldType instanceof InterfaceType) {
-                    /** @var ObjectType $implementationType */
                     $implementationType = null;
+                    assert($implementationType instanceof ObjectType);
                     if (isset($mocks[$fieldType->name])) {
                         $interfaceMockObj = $mocks[$fieldType->name]($root, $args, $context, $info);
                         if (! $interfaceMockObj || ! isset($interfaceMockObj['__typename'])) {
                             throw new Exception('Please return a __typename in "' . $fieldType->name . '"');
                         }
+
                         $implementationType = $schema->getType($interfaceMockObj['__typename']);
                     } else {
                         $possibleTypes      = $schema->getPossibleTypes($fieldType);
@@ -260,8 +254,8 @@ class Mock
                     }
 
                     return array_merge(
-                        ['__typename' => $implementationType->name ],
-                        $mockType($implementationType)($root, $args, $context, $info)
+                        ['__typename' => $implementationType->name],
+                        $mockType($implementationType)($root, $args, $context, $info),
                     );
                 }
 
@@ -282,13 +276,13 @@ class Mock
             static function (
                 FieldDefinition $field,
                 string $typeName,
-                string $fieldName
+                string $fieldName,
             ) use (
                 $preserveResolvers,
                 $schema,
                 $mocks,
-                $mockType
-            ) : void {
+                $mockType,
+            ): void {
                 static::assignResolveType($field->getType(), $preserveResolvers);
                 $mockResolver = null;
 
@@ -305,26 +299,26 @@ class Mock
                                 $root,
                                 $args,
                                 $context,
-                                ResolveInfo $info
+                                ResolveInfo $info,
                             ) use (
                                 $fieldName,
                                 $rootMock,
                                 $mockType,
                                 $field,
-                                $typeName
+                                $typeName,
                             ) {
                                 $updatedRoot             = $root ?? [];
                                 $updatedRoot[$fieldName] = $rootMock(
                                     $root,
                                     $args,
                                     $context,
-                                    $info
+                                    $info,
                                 )[$fieldName];
 
                                 return $mockType(
                                     $field->getType(),
                                     $typeName,
-                                    $fieldName
+                                    $fieldName,
                                 )($updatedRoot, $args, $context, $info);
                             };
                         }
@@ -343,10 +337,10 @@ class Mock
                         $rootObject,
                         $args,
                         $context,
-                        $info
+                        $info,
                     ) use (
                         $mockResolver,
-                        $oldResolver
+                        $oldResolver,
                     ) {
                         $resolvedValue = null;
                         try {
@@ -367,18 +361,15 @@ class Mock
                         return $resolvedValue ?? $mockedValue;
                     };
                 }
-            }
+            },
         );
     }
 
-    /**
-     * @param mixed[] $ary
-     *
-     * @return mixed
-     */
-    private static function getRandomElement(array $ary)
+    /** @param mixed[] $ary */
+    private static function getRandomElement(array $ary): mixed
     {
         $sample = rand(0, count($ary) - 1);
+
         return $ary[$sample];
     }
 
@@ -388,7 +379,7 @@ class Mock
      *
      * @return mixed[]
      */
-    private static function copyOwnProps(array $target, array $source) : array
+    private static function copyOwnProps(array $target, array $source): array
     {
         foreach ($source as $key => $value) {
             if (! is_string($key)) {
@@ -405,12 +396,7 @@ class Mock
         return $target;
     }
 
-    /**
-     * @param mixed $customMock
-     *
-     * @return mixed
-     */
-    protected static function mergeMocks(callable $genericMockFunctions, $customMock)
+    protected static function mergeMocks(callable $genericMockFunctions, mixed $customMock): mixed
     {
         if (Utils::isNumericArray($customMock)) {
             return array_map(static function ($el) use ($genericMockFunctions) {
@@ -425,7 +411,7 @@ class Mock
         return $customMock;
     }
 
-    protected static function getResolveType(NamedType $namedFieldType) : ?callable
+    protected static function getResolveType(NamedType $namedFieldType): callable|null
     {
         if ($namedFieldType instanceof InterfaceType || $namedFieldType instanceof  UnionType) {
             return $namedFieldType->config['resolveType'] ?? null;
@@ -434,7 +420,7 @@ class Mock
         return null;
     }
 
-    protected static function assignResolveType(Type $type, bool $preserveResolvers) : void
+    protected static function assignResolveType(Type $type, bool $preserveResolvers): void
     {
         $fieldType      = Type::getNullableType($type);
         $namedFieldType = Type::getNamedType($fieldType);

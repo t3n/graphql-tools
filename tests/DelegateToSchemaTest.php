@@ -15,7 +15,7 @@ class DelegateToSchemaTest extends TestCase
      *
      * @return mixed[]
      */
-    protected static function findPropertyByLocationName(array $properties, string $name) : array
+    protected static function findPropertyByLocationName(array $properties, string $name): array
     {
         foreach ($properties as $key => $property) {
             if ($property['location']['name'] === $name) {
@@ -26,8 +26,7 @@ class DelegateToSchemaTest extends TestCase
         return null;
     }
 
-    /** @var string */
-    protected $COORDINATES_QUERY = '
+    protected string $COORDINATES_QUERY = '
         query BookingCoordinates($bookingId: ID!) {
             bookingById (id: $bookingId) {
                 property {
@@ -39,10 +38,8 @@ class DelegateToSchemaTest extends TestCase
         }
     ';
 
-    /**
-     * @return mixed[]
-     */
-    protected static function proxyResolvers(string $spec) : array
+    /** @return mixed[] */
+    protected static function proxyResolvers(string $spec): array
     {
         return [
             'Booking' => [
@@ -71,9 +68,10 @@ class DelegateToSchemaTest extends TestCase
                     'fragment' => '... on Location { name }',
                     'resolve' => static function ($location, $args, $context, $info) {
                         $name = $location['name'];
+
                         return static::findPropertyByLocationName(
                             TestingSchemas::$sampleData['Property'],
-                            $name
+                            $name,
                         )['location']['coordinates'];
                     },
                 ],
@@ -81,8 +79,7 @@ class DelegateToSchemaTest extends TestCase
         ];
     }
 
-    /** @var string */
-    protected $proxyTypeDefs = '
+    protected string $proxyTypeDefs = '
         extend type Booking {
             property: Property!
         }
@@ -91,7 +88,7 @@ class DelegateToSchemaTest extends TestCase
         }
     ';
 
-    public function testDelegateToSchemaStandaloneShouldAddFragmentsForDeepTypes() : void
+    public function testDelegateToSchemaStandaloneShouldAddFragmentsForDeepTypes(): void
     {
         $schema = GraphQLTools::mergeSchemas([
             'schemas' => [TestingSchemas::bookingSchema(), TestingSchemas::propertySchema(), $this->proxyTypeDefs],
@@ -103,7 +100,7 @@ class DelegateToSchemaTest extends TestCase
             $this->COORDINATES_QUERY,
             [],
             [],
-            ['bookingId' => 'b1']
+            ['bookingId' => 'b1'],
         );
 
         $coordinates = TestingSchemas::$sampleData['Property']['p1']['location']['coordinates'];
@@ -117,11 +114,11 @@ class DelegateToSchemaTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 
-    public function testDelegateToSchemaInfoMergeInfoShouldAddFragmentsForDeepTypes() : void
+    public function testDelegateToSchemaInfoMergeInfoShouldAddFragmentsForDeepTypes(): void
     {
         $schema = GraphQLTools::mergeSchemas([
             'schemas' => [TestingSchemas::bookingSchema(), TestingSchemas::propertySchema(), $this->proxyTypeDefs],
@@ -133,7 +130,7 @@ class DelegateToSchemaTest extends TestCase
             $this->COORDINATES_QUERY,
             [],
             [],
-            ['bookingId' => 'b1']
+            ['bookingId' => 'b1'],
         );
 
         $coordinates = TestingSchemas::$sampleData['Property']['p1']['location']['coordinates'];
@@ -147,7 +144,7 @@ class DelegateToSchemaTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 }

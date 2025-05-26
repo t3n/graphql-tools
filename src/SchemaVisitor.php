@@ -23,17 +23,18 @@ use GraphQL\Type\Definition\UnionType;
 use GraphQL\Type\Schema;
 use ReflectionMethod;
 use Throwable;
+
 use function array_values;
+use function assert;
 use function method_exists;
 use function preg_match;
 use function substr;
 
 class SchemaVisitor
 {
-    /** @var Schema */
-    public $schema;
+    public Schema $schema;
 
-    public static function implementsVisitorMethod(string $methodName) : bool
+    public static function implementsVisitorMethod(string $methodName): bool
     {
         if (! preg_match('/^visit/', $methodName)) {
             return false;
@@ -58,99 +59,63 @@ class SchemaVisitor
         return true;
     }
 
-    public static function removeNode() : VisitorOperation
+    public static function removeNode(): VisitorOperation
     {
         $operation             = new VisitorOperation();
         $operation->removeNode = true;
+
         return $operation;
     }
 
-    /**
-     * @return void|mixed
-     */
-    public function visitSchema(Schema $schema)
+    public function visitSchema(Schema $schema): mixed
     {
     }
 
-    /**
-     * @return void|mixed
-     */
-    public function visitScalar(ScalarType $scalar)
+    public function visitScalar(ScalarType $scalar): mixed
     {
     }
 
-    /**
-     * @return void|mixed
-     */
-    public function visitObject(ObjectType $object)
+    public function visitObject(ObjectType $object): mixed
     {
     }
 
-    /**
-     * @param mixed[] $details
-     *
-     * @return void|mixed
-     */
-    public function visitFieldDefinition(FieldDefinition $field, array $details)
+    /** @param mixed[] $details */
+    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
     {
     }
 
-    /**
-     * @param mixed[] $details
-     *
-     * @return void|mixed
-     */
-    public function visitArgumentDefinition(FieldArgument $argument, array $details)
+    /** @param mixed[] $details */
+    public function visitArgumentDefinition(FieldArgument $argument, array $details): mixed
     {
     }
 
-    /**
-     * @return void|mixed
-     */
-    public function visitInterface(InterfaceType $iface)
+    public function visitInterface(InterfaceType $iface): mixed
     {
     }
 
-    /**
-     * @return void|mixed
-     */
-    public function visitUnion(UnionType $union)
+    public function visitUnion(UnionType $union): mixed
     {
     }
 
-    /**
-     * @return void|mixed
-     */
-    public function visitEnum(EnumType $type)
+    public function visitEnum(EnumType $type): mixed
     {
     }
 
-    /**
-     * @param mixed[] $details
-     *
-     * @return void|mixed
-     */
-    public function visitEnumValue(EnumValueDefinition $value, array $details)
+    /** @param mixed[] $details */
+    public function visitEnumValue(EnumValueDefinition $value, array $details): mixed
     {
     }
 
-    /**
-     * @return void|mixed
-     */
-    public function visitInputObject(InputObjectType $object)
+    public function visitInputObject(InputObjectType $object): mixed
     {
     }
 
-    /**
-     * @param mixed[] $details
-     *
-     * @return void|mixed
-     */
-    public function visitInputFieldDefinition(InputObjectField $field, array $details)
+    /** @param mixed[] $details */
+    public function visitInputFieldDefinition(InputObjectField $field, array $details): mixed
     {
     }
 
-    public static function doVisitSchema(Schema $schema, callable $visitorSelector) : Schema
+    public static function doVisitSchema(Schema $schema, callable $visitorSelector): Schema
     {
         $callMethod = static function (string $methodName, $type, ...$args) use ($visitorSelector) {
             foreach ($visitorSelector($type, $methodName) as $visitor) {
@@ -207,12 +172,13 @@ class SchemaVisitor
                 if ($newInterface) {
                     $visitFields($newInterface);
                 }
+
                 return $newInterface;
             }
 
             if ($type instanceof InputObjectType) {
-                /** @var InputObjectType $newInputObject */
                 $newInputObject = $callMethod('visitInputObject', $type);
+                assert($newInputObject instanceof InputObjectType);
 
                 if ($newInputObject) {
                     $fields = $newInputObject->getFields();
@@ -234,8 +200,8 @@ class SchemaVisitor
             }
 
             if ($type instanceof EnumType) {
-                /** @var EnumType $newEnum */
                 $newEnum = $callMethod('visitEnum', $type);
+                assert($newEnum instanceof EnumType);
 
                 if ($newEnum) {
                     $values = $newEnum->getValues();
@@ -243,7 +209,7 @@ class SchemaVisitor
                         $values,
                         static function (EnumValueDefinition $value) use ($callMethod, $newEnum) {
                             return $callMethod('visitEnumValue', $value, ['enumType' => $newEnum]);
-                        }
+                        },
                     );
                     Utils::forceSet($newEnum, 'values', array_values($values));
                 }
@@ -254,10 +220,8 @@ class SchemaVisitor
             throw new Exception('Unexpected schema type:' . $type);
         };
 
-        /**
-         * @param ObjectType|InterfaceType $type
-         */
-        $visitFields = static function ($type) use ($callMethod) : void {
+        /** @param ObjectType|InterfaceType $type */
+        $visitFields = static function ($type) use ($callMethod): void {
             $fields = $type->getFields();
             static::updateEachKey($fields, static function (FieldDefinition $field) use ($callMethod, $type) {
                 $newField = $callMethod('visitFieldDefinition', $field, ['objectType' => $type]);
@@ -270,7 +234,7 @@ class SchemaVisitor
                                 'field' => $newField,
                                 'objectType' => $type,
                             ]);
-                        }
+                        },
                     );
                 }
 
@@ -280,12 +244,13 @@ class SchemaVisitor
         };
 
         $visit($schema);
+
         return $schema;
     }
 
-    public static function healSchema(Schema $schema) : Schema
+    public static function healSchema(Schema $schema): Schema
     {
-        $healType = static function ($type) use (&$healType, $schema) : Type {
+        $healType = static function ($type) use (&$healType, $schema): Type {
             if ($type instanceof ListOfType) {
                 $type = new ListOfType($healType($type->getWrappedType()));
             } elseif ($type instanceof NonNull) {
@@ -294,7 +259,7 @@ class SchemaVisitor
                 $namedType = $type;
                 try {
                     $officialType = $schema->getType($namedType->name);
-                } catch (Throwable $exception) {
+                } catch (Throwable) {
                     $officialType = null;
                 }
 
@@ -302,13 +267,12 @@ class SchemaVisitor
                     return $officialType;
                 }
             }
+
             return $type;
         };
 
-        /**
-         * @param ObjectType|InterfaceType $type
-         */
-        $healFields = static function ($type) use ($healType) : void {
+        /** @param ObjectType|InterfaceType $type */
+        $healFields = static function ($type) use ($healType): void {
             foreach ($type->getFields() as $field) {
                 Utils::forceSet($field, 'type', $healType($field->getType()));
                 if (! $field->args) {
@@ -321,7 +285,7 @@ class SchemaVisitor
             }
         };
 
-        $heal = static function ($type) use ($healType, $healFields, &$heal) : void {
+        $heal = static function ($type) use ($healType, $healFields, &$heal): void {
             if ($type instanceof Schema) {
                 $originalTypeMap    = $type->getTypeMap();
                 $actualNamedTypeMap = [];
@@ -346,6 +310,7 @@ class SchemaVisitor
                 foreach ($actualNamedTypeMap as $typeName => $namedType) {
                     $originalTypeMap[$typeName] = $namedType;
                 }
+
                 Utils::forceSet($type, 'resolvedTypes', $originalTypeMap);
 
                 foreach ($type->getDirectives() as $decl) {
@@ -373,6 +338,7 @@ class SchemaVisitor
 
                     unset($originalTypeMap[$typeName]);
                 }
+
                 Utils::forceSet($type, 'resolvedTypes', $originalTypeMap);
             } elseif ($type instanceof ObjectType) {
                 $healFields($type);
@@ -393,6 +359,7 @@ class SchemaVisitor
                 foreach ($type->getTypes() as $t) {
                     $types[] = $healType($t);
                 }
+
                 Utils::forceSet($type, 'types', $types);
             // phpcs:ignore
             } elseif ($type instanceof EnumType) {
@@ -403,13 +370,12 @@ class SchemaVisitor
         };
 
         $heal($schema);
+
         return $schema;
     }
 
-    /**
-     * @param mixed[] $arr
-     */
-    protected static function updateEachKey(array &$arr, callable $callback) : void
+    /** @param mixed[] $arr */
+    protected static function updateEachKey(array &$arr, callable $callback): void
     {
         foreach ($arr as $key => $value) {
             $result = $callback($value, $key);

@@ -7,11 +7,12 @@ namespace GraphQLTools\Generate;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
+
 use function substr;
 
 class ForEachField
 {
-    public static function invoke(Schema $schema, callable $fn) : void
+    public static function invoke(Schema $schema, callable $fn): void
     {
         $typeMap = $schema->getTypeMap();
 

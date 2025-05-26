@@ -30,34 +30,41 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
 use GraphQL\Utils\AST;
 use GraphQLTools\Utils;
+
 use function array_map;
 
 class TypeFromAST
 {
     /** @var mixed[] */
-    private static $backcompatOptions = [ 'commentDescriptions' => true ];
+    private static array $backcompatOptions = ['commentDescriptions' => true];
 
-    public static function invoke(DefinitionNode $node) : ?NamedType
+    public static function invoke(DefinitionNode $node): NamedType|null
     {
         switch (true) {
             case $node instanceof ObjectTypeDefinitionNode:
                 return static::makeObjectType($node);
+
             case $node instanceof InterfaceTypeDefinitionNode:
                 return static::makeInterfaceType($node);
+
             case $node instanceof EnumTypeDefinitionNode:
                 return static::makeEnumType($node);
+
             case $node instanceof UnionTypeDefinitionNode:
                 return static::makeUnionType($node);
+
             case $node instanceof ScalarTypeDefinitionNode:
                 return static::makeScalarType($node);
+
             case $node instanceof InputObjectTypeDefinitionNode:
                 return static::makeInputObjectType($node);
+
             default:
                 return null;
         }
     }
 
-    private static function makeObjectType(ObjectTypeDefinitionNode $node) : ObjectType
+    private static function makeObjectType(ObjectTypeDefinitionNode $node): ObjectType
     {
         return new ObjectType([
             'name' => $node->name->value,
@@ -73,7 +80,7 @@ class TypeFromAST
         ]);
     }
 
-    private static function makeInterfaceType(InterfaceTypeDefinitionNode $node) : InterfaceType
+    private static function makeInterfaceType(InterfaceTypeDefinitionNode $node): InterfaceType
     {
         return new InterfaceType([
             'name' => $node->name->value,
@@ -81,13 +88,13 @@ class TypeFromAST
                 return static::makeFields(Utils::toArray($node->fields));
             },
             'description' => Utils::getDescription($node, static::$backcompatOptions),
-            'resolveType' => static function ($parent, $context, $info) : void {
+            'resolveType' => static function ($parent, $context, $info): void {
                 ResolveFromParentTypename::invoke($parent, $info->schema);
             },
         ]);
     }
 
-    private static function makeEnumType(EnumTypeDefinitionNode $node) : EnumType
+    private static function makeEnumType(EnumTypeDefinitionNode $node): EnumType
     {
         $values = [];
         foreach ($node->values as $value) {
@@ -95,6 +102,7 @@ class TypeFromAST
                 'description' => Utils::getDescription($node, static::$backcompatOptions),
             ];
         }
+
         return new EnumType([
             'name' => $node->name->value,
             'values' => $values,
@@ -102,7 +110,7 @@ class TypeFromAST
         ]);
     }
 
-    private static function makeUnionType(UnionTypeDefinitionNode $node) : UnionType
+    private static function makeUnionType(UnionTypeDefinitionNode $node): UnionType
     {
         return new UnionType([
             'name' => $node->name->value,
@@ -118,7 +126,7 @@ class TypeFromAST
         ]);
     }
 
-    private static function makeScalarType(ScalarTypeDefinitionNode $node) : ScalarType
+    private static function makeScalarType(ScalarTypeDefinitionNode $node): ScalarType
     {
         return new CustomScalarType([
             'name' => $node->name->value,
@@ -135,7 +143,7 @@ class TypeFromAST
         ]);
     }
 
-    private static function makeInputObjectType(InputObjectTypeDefinitionNode $node) : InputObjectType
+    private static function makeInputObjectType(InputObjectTypeDefinitionNode $node): InputObjectType
     {
         return new InputObjectType([
             'name' => $node->name->value,
@@ -151,7 +159,7 @@ class TypeFromAST
      *
      * @return mixed[]
      */
-    private static function makeFields(array $nodes) : array
+    private static function makeFields(array $nodes): array
     {
         $result = [];
         foreach ($nodes as $node) {
@@ -170,7 +178,7 @@ class TypeFromAST
      *
      * @return mixed[]
      */
-    private static function makeValues(array $nodes) : array
+    private static function makeValues(array $nodes): array
     {
         $result = [];
         foreach ($nodes as $node) {
@@ -185,19 +193,21 @@ class TypeFromAST
         return $result;
     }
 
-    private static function resolveType(TypeNode $node, string $type) : Type
+    private static function resolveType(TypeNode $node, string $type): Type
     {
         switch (true) {
             case $node instanceof ListTypeNode:
                 return new ListOfType(static::resolveType($node->type, $type));
+
             case $node instanceof NonNullTypeNode:
                 return new NonNull(static::resolveType($node->type, $type));
+
             default:
                 return static::createNamedStub($node->name->value, $type);
         }
     }
 
-    private static function createNamedStub(string $name, string $type) : Type
+    private static function createNamedStub(string $name, string $type): Type
     {
         $constructor = null;
         if ($type === 'object') {

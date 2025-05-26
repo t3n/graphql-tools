@@ -16,6 +16,7 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
 use GraphQL\Type\Schema;
 use GraphQLTools\Stitching\SchemaRecreation;
+
 use function array_filter;
 use function array_key_exists;
 use function array_pop;
@@ -27,10 +28,8 @@ use function substr;
 
 class VisitSchema
 {
-    /**
-     * @param callable[] $visitor
-     */
-    public static function invoke(Schema $schema, array $visitor, bool $stripResolvers = false) : Schema
+    /** @param callable[] $visitor */
+    public static function invoke(Schema $schema, array $visitor, bool $stripResolvers = false): Schema
     {
         $types       = [];
         $resolveType = SchemaRecreation::createResolveType(static function (string $name) use (&$types) {
@@ -85,10 +84,8 @@ class VisitSchema
         ]);
     }
 
-    /**
-     * @return callable[]
-     */
-    protected static function getTypeSpecifiers(Type $type, Schema $schema) : array
+    /** @return callable[] */
+    protected static function getTypeSpecifiers(Type $type, Schema $schema): array
     {
         $specifiers = [VisitSchemaKind::TYPE];
         if ($type instanceof ObjectType) {
@@ -112,14 +109,14 @@ class VisitSchema
                 $specifiers,
                 VisitSchemaKind::COMPOSITE_TYPE,
                 VisitSchemaKind::ABSTRACT_TYPE,
-                VisitSchemaKind::INPUT_OBJECT_TYPE
+                VisitSchemaKind::INPUT_OBJECT_TYPE,
             );
         } elseif ($type instanceof UnionType) {
             array_push(
                 $specifiers,
                 VisitSchemaKind::COMPOSITE_TYPE,
                 VisitSchemaKind::ABSTRACT_TYPE,
-                VisitSchemaKind::UNION_TYPE
+                VisitSchemaKind::UNION_TYPE,
             );
         } elseif ($type instanceof EnumType) {
             $specifiers[] = VisitSchemaKind::ENUM_TYPE;
@@ -134,7 +131,7 @@ class VisitSchema
      * @param mixed[] $visitor
      * @param mixed[] $specifiers
      */
-    public static function getVisitor(array $visitor, array $specifiers) : ?callable
+    public static function getVisitor(array $visitor, array $specifiers): callable|null
     {
         $typeVisitor = null;
         $stack       = $specifiers;
@@ -146,17 +143,19 @@ class VisitSchema
         return $typeVisitor;
     }
 
-    public static function skipNode() : VisitorOperation
+    public static function skipNode(): VisitorOperation
     {
         $r             = new VisitorOperation();
         $r->doContinue = true;
+
         return $r;
     }
 
-    public static function removeNode() : VisitorOperation
+    public static function removeNode(): VisitorOperation
     {
         $r             = new VisitorOperation();
         $r->removeNode = true;
+
         return $r;
     }
 }

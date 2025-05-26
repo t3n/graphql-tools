@@ -16,7 +16,7 @@ class Resolvers
      *
      * @return mixed[]
      */
-    public static function generateProxyingResolvers(Schema $targetSchema, array $transforms, array $mapping) : array
+    public static function generateProxyingResolvers(Schema $targetSchema, array $transforms, array $mapping): array
     {
         $result = [];
         foreach ($mapping as $name => $innerMapping) {
@@ -29,7 +29,7 @@ class Resolvers
                         $targetSchema,
                         $to['operation'],
                         $to['name'],
-                        $transforms
+                        $transforms,
                     ),
                 ];
             }
@@ -38,10 +38,8 @@ class Resolvers
         return $result;
     }
 
-    /**
-     * @return mixed[]
-     */
-    public static function generateSimpleMapping(Schema $targetSchema) : array
+    /** @return mixed[] */
+    public static function generateSimpleMapping(Schema $targetSchema): array
     {
         $query        = $targetSchema->getQueryType();
         $mutation     = $targetSchema->getMutationType();
@@ -63,10 +61,8 @@ class Resolvers
         return $result;
     }
 
-    /**
-     * @return mixed[]
-     */
-    private static function generateMappingFromObjectType(ObjectType $type, string $operation) : array
+    /** @return mixed[] */
+    private static function generateMappingFromObjectType(ObjectType $type, string $operation): array
     {
         $result = [];
         $fields = $type->getFields();
@@ -81,25 +77,23 @@ class Resolvers
         return $result;
     }
 
-    /**
-     * @param mixed[] $transforms
-     */
+    /** @param mixed[] $transforms */
     private static function createProxyingResolver(
         Schema $schema,
         string $operation,
         string $fieldName,
-        array $transforms
-    ) : callable {
+        array $transforms,
+    ): callable {
         return static function (
             $parent,
             $args,
             $context,
-            ResolveInfo $info
+            ResolveInfo $info,
         ) use (
             $schema,
             $operation,
             $fieldName,
-            $transforms
+            $transforms,
         ) {
             return DelegateToSchema::invoke([
                 'schema' => $schema,

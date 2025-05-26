@@ -10,24 +10,20 @@ use GraphQLTools\Tests\TestingSchemas;
 use GraphQLTools\Transforms\FilterToSchema;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @see describe('filter to schema')
- */
+/** @see describe('filter to schema') */
 class FilterToSchemaTest extends TestCase
 {
-    /** @var FilterToSchema */
-    protected $filter;
+    protected FilterToSchema $filter;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
+
         $this->filter = new FilterToSchema(TestingSchemas::bookingSchema());
     }
 
-    /**
-     * @see it('should remove empty selection sets on objects')
-     */
-    public function testShouldRemoveEmptySelectionSetsOnObjects() : void
+    /** @see it('should remove empty selection sets on objects') */
+    public function testShouldRemoveEmptySelectionSetsOnObjects(): void
     {
         $query = Parser::parse('
             query customerQuery($id: ID!) {
@@ -58,10 +54,8 @@ class FilterToSchemaTest extends TestCase
         static::assertEquals(Printer::doPrint($expected), Printer::doPrint($filteredQuery['document']));
     }
 
-    /**
-     * @see it('should also remove variables when removing empty selection sets')
-     */
-    public function testShouldAlsoRemoveVariablesWhenRemovingEmptySelectionSets() : void
+    /** @see it('should also remove variables when removing empty selection sets') */
+    public function testShouldAlsoRemoveVariablesWhenRemovingEmptySelectionSets(): void
     {
         $query = Parser::parse('
             query customerQuery($id: ID!, $limit: Int) {
@@ -95,10 +89,8 @@ class FilterToSchemaTest extends TestCase
         static::assertEquals(Printer::doPrint($expected), Printer::doPrint($filteredQuery['document']));
     }
 
-    /**
-     * @see it('should remove empty selection sets on wrapped objects (non-nullable/lists)')
-     */
-    public function testShouldRemoveEmptySelectionSetsOnWrappedObjectsNonNullableLists() : void
+    /** @see it('should remove empty selection sets on wrapped objects (non-nullable/lists)') */
+    public function testShouldRemoveEmptySelectionSetsOnWrappedObjectsNonNullableLists(): void
     {
         $query = Parser::parse('
             query bookingQuery($id: ID!) {

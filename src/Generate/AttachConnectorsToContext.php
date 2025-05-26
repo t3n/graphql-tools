@@ -9,6 +9,7 @@ use GraphQL\Type\Schema;
 use GraphQLTools\Utils;
 use stdClass;
 use TypeError;
+
 use function call_user_func;
 use function class_exists;
 use function count;
@@ -20,10 +21,8 @@ use function is_string;
 
 class AttachConnectorsToContext
 {
-    /**
-     * @param mixed[] $connectors
-     */
-    public static function invoke(Schema $schema, array $connectors) : void
+    /** @param mixed[] $connectors */
+    public static function invoke(Schema $schema, array $connectors): void
     {
         if (count($connectors) === 0) {
             throw new TypeError('Expected connectors to not be an empty array');
@@ -42,6 +41,7 @@ class AttachConnectorsToContext
         $attachconnectorFn = static function ($root, array $args, &$ctx) use ($connectors) {
             if (! is_object($ctx)) {
                 $contextType = gettype($ctx);
+
                 throw new Exception('Cannot attach connector because context is not an object: ' . $contextType);
             }
 

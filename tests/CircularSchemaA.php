@@ -6,10 +6,8 @@ namespace GraphQLTools\Tests;
 
 class CircularSchemaA
 {
-    /**
-     * @return mixed[]
-     */
-    public static function build() : array
+    /** @return mixed[] */
+    public static function build(): array
     {
         return [
             '

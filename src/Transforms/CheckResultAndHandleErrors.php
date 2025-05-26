@@ -10,22 +10,14 @@ use GraphQLTools\Stitching\Errors;
 
 class CheckResultAndHandleErrors implements Transform
 {
-    /** @var ResolveInfo */
-    private $info;
+    private string $fieldName;
 
-    /** @var string */
-    private $fieldName;
-
-    public function __construct(ResolveInfo $info, ?string $fieldName = null)
+    public function __construct(private ResolveInfo $info, string|null $fieldName = null)
     {
-        $this->info      = $info;
         $this->fieldName = $fieldName;
     }
 
-    /**
-     * @return mixed
-     */
-    public function transformResult(ExecutionResult $result)
+    public function transformResult(ExecutionResult $result): mixed
     {
         return Errors::checkResultAndHandleErrors($result, $this->info, $this->fieldName);
     }

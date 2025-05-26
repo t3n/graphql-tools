@@ -12,6 +12,7 @@ use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Definition\NamedType;
 use GraphQL\Type\Definition\ScalarType;
 use GraphQL\Type\Schema;
+
 use function is_array;
 
 class RenameTypes implements Transform
@@ -19,15 +20,11 @@ class RenameTypes implements Transform
     /** @var callable  */
     protected $renamer;
     /** @var mixed[] */
-    protected $reverseMap = [];
-    /** @var bool */
-    protected $renameBuiltins;
-    /** @var bool */
-    protected $renameScalars;
+    protected array $reverseMap = [];
+    protected bool $renameBuiltins;
+    protected bool $renameScalars;
 
-    /**
-     * @param mixed[] $options
-     */
+    /** @param mixed[] $options */
     public function __construct(callable $renamer, array $options = [])
     {
         $this->renamer        = $renamer;
@@ -35,7 +32,7 @@ class RenameTypes implements Transform
         $this->renameScalars  = $options['renameScalars'] ?? true;
     }
 
-    public function transformSchema(Schema $originalSchema) : Schema
+    public function transformSchema(Schema $originalSchema): Schema
     {
         return VisitSchema::invoke($originalSchema, [
             VisitSchemaKind::TYPE => function (NamedType $type) {
@@ -53,6 +50,7 @@ class RenameTypes implements Transform
                     $this->reverseMap[$newName] = $type->name;
                     $newType                    = clone $type;
                     $newType->name              = $newName;
+
                     return $newType;
                 }
 
@@ -69,7 +67,7 @@ class RenameTypes implements Transform
      *
      * @return mixed[]
      */
-    public function transformRequest(array $originalRequest) : array
+    public function transformRequest(array $originalRequest): array
     {
         $newDocument = Visitor::visit($originalRequest['document'], [
             NodeKind::NAMED_TYPE => function (NamedTypeNode $node) {
@@ -78,6 +76,7 @@ class RenameTypes implements Transform
                     $node              = clone $node;
                     $node->name        = clone $node->name;
                     $node->name->value = $this->reverseMap[$name];
+
                     return $node;
                 }
 
@@ -91,13 +90,14 @@ class RenameTypes implements Transform
         ];
     }
 
-    public function transformResult(ExecutionResult $result) : ExecutionResult
+    public function transformResult(ExecutionResult $result): ExecutionResult
     {
         if ($result->data) {
             $data = $this->renameTypes($result->data, 'data');
             if ($data !== $result->data) {
                 $result       = clone $result;
                 $result->data = $data;
+
                 return $result;
             }
         }
@@ -105,15 +105,11 @@ class RenameTypes implements Transform
         return $result;
     }
 
-    /**
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    private function renameTypes($value, ?string $name)
+    private function renameTypes(mixed $value, string|null $name): mixed
     {
         if ($name === '__typename') {
             $renamer = $this->renamer;
+
             return $renamer($value);
         }
 

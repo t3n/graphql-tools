@@ -10,34 +10,32 @@ use GraphQLTools\GraphQLTools;
 use GraphQLTools\Tests\TestingSchemas;
 use GraphQLTools\Transforms\FilterTypes;
 use PHPUnit\Framework\TestCase;
+
 use function in_array;
 
-/**
- * @see describe('filter type')
- */
+/** @see describe('filter type') */
 class FilterTypeTest extends TestCase
 {
-    /** @var Schema */
-    protected $schema;
+    protected Schema $schema;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
+
         $typeNames  = ['ID', 'String', 'DateTime', 'Query', 'Booking'];
-        $transforms = [new FilterTypes(
-            static function ($type) use ($typeNames) {
+        $transforms = [
+            new FilterTypes(
+                static function ($type) use ($typeNames) {
                     return in_array($type->name, $typeNames);
-            }
-        ),
+                },
+            ),
         ];
 
         $this->schema = GraphQLTools::transformSchema(TestingSchemas::bookingSchema(), $transforms);
     }
 
-    /**
-     * @see it('should work normally')
-     */
-    public function testShouldWorkNormally() : void
+    /** @see it('should work normally') */
+    public function testShouldWorkNormally(): void
     {
         $result = GraphQL::executeQuery(
             $this->schema,
@@ -50,7 +48,7 @@ class FilterTypeTest extends TestCase
                         endTime
                     }
                 }
-            '
+            ',
         );
 
         static::assertEquals(
@@ -64,14 +62,12 @@ class FilterTypeTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 
-    /**
-     * @see it('should error on removed types')
-     */
-    public function testShouldErrorOnRemovedTypes() : void
+    /** @see it('should error on removed types') */
+    public function testShouldErrorOnRemovedTypes(): void
     {
         $result = GraphQL::executeQuery(
             $this->schema,
@@ -87,14 +83,14 @@ class FilterTypeTest extends TestCase
                         }
                     }
                 }
-            '
+            ',
         );
 
         static::assertNotEmpty($result->errors);
         static::assertCount(1, $result->errors);
         static::assertEquals(
             'Cannot query field "customer" on type "Booking".',
-            $result->errors[0]->getMessage()
+            $result->errors[0]->getMessage(),
         );
     }
 }

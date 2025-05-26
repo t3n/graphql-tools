@@ -9,15 +9,14 @@ use GraphQLTools\Stitching\SchemaRecreation;
 
 class RenameRootFields implements Transform
 {
-    /** @var TransformRootFields */
-    private $transformer;
+    private TransformRootFields $transformer;
 
     public function __construct(callable $renamer)
     {
         $resolveType = SchemaRecreation::createResolveType(
             static function ($name, $type) {
                 return $type;
-            }
+            },
         );
 
         $this->transformer = new TransformRootFields(
@@ -26,11 +25,11 @@ class RenameRootFields implements Transform
                     'name' => $renamer($operation, $fieldName, $field),
                     'field' => SchemaRecreation::fieldToFieldConfig($field, $resolveType, true),
                 ];
-            }
+            },
         );
     }
 
-    public function transformSchema(Schema $originalSchema) : Schema
+    public function transformSchema(Schema $originalSchema): Schema
     {
         return $this->transformer->transformSchema($originalSchema);
     }

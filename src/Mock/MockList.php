@@ -7,6 +7,7 @@ namespace GraphQLTools\Mock;
 use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
+
 use function array_fill;
 use function count;
 use function is_array;
@@ -14,35 +15,24 @@ use function rand;
 
 class MockList
 {
-    /** @var int|int[] */
-    private $len;
     /** @var callable */
     private $wrappedFunction;
 
-    /**
-     * @param int|int[] $len
-     */
-    public function __construct($len, ?callable $wrappedFunction = null)
+    /** @param int|int[] $len */
+    public function __construct(private int|array $len, callable|null $wrappedFunction = null)
     {
-        $this->len             = $len;
         $this->wrappedFunction = $wrappedFunction;
     }
 
-    /**
-     * @param mixed $root
-     * @param mixed $args
-     * @param mixed $context
-     *
-     * @return mixed[]
-     */
+    /** @return mixed[] */
     public function mock(
-        $root,
-        $args,
-        $context,
+        mixed $root,
+        mixed $args,
+        mixed $context,
         ResolveInfo $info,
         ListOfType $fieldType,
-        callable $mockTypeFunc
-    ) : array {
+        callable $mockTypeFunc,
+    ): array {
         $arr = null;
         if (is_array($this->len)) {
             $arr = array_fill(0, rand($this->len[0], $this->len[1]), null);
@@ -51,7 +41,7 @@ class MockList
         }
 
         $wrappedFunction = $this->wrappedFunction;
-        for ($i = 0; $i< count($arr); $i++) {
+        for ($i = 0; $i < count($arr); $i++) {
             if ($wrappedFunction) {
                 $res = $wrappedFunction($root, $args, $context, $info);
                 if ($res instanceof MockList) {
@@ -62,7 +52,7 @@ class MockList
                         $context,
                         $info,
                         $nullableType,
-                        $mockTypeFunc
+                        $mockTypeFunc,
                     );
                 } else {
                     $arr[$i] = $res;
@@ -71,6 +61,7 @@ class MockList
                 $arr[$i] = $mockTypeFunc($fieldType->ofType)($root, $args, $context, $info);
             }
         }
+
         return $arr;
     }
 }

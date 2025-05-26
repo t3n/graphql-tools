@@ -8,6 +8,7 @@ use GraphQL\Error\Error;
 use GraphQL\Executor\ExecutionResult;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQLTools\Utils;
+
 use function array_keys;
 use function array_map;
 use function array_merge;
@@ -20,13 +21,8 @@ class Errors
 {
     public const ERROR_SYMBOL = '@@__subSchemaErrors';
 
-    /**
-     * @param mixed        $object
-     * @param mixed[]|null $childrenErrors
-     *
-     * @return mixed
-     */
-    public static function annotateWithChildrenErrors($object, ?array $childrenErrors)
+    /** @param mixed[]|null $childrenErrors */
+    public static function annotateWithChildrenErrors(mixed $object, array|null $childrenErrors): mixed
     {
         if ($childrenErrors === null || count($childrenErrors) === 0) {
             return $object;
@@ -47,18 +43,19 @@ class Errors
                 $byIndex[$index] = $current;
             }
 
-            return array_map(static function ($item, int $index) use ($byIndex) : array {
+            return array_map(static function ($item, int $index) use ($byIndex): array {
                 return static::annotateWithChildrenErrors($item, $byIndex[$index]);
             }, $object, array_keys($object));
         }
 
         if (is_object($object)) {
-            $object->{static::ERROR_SYMBOL} = array_map(static function (array $error) : array {
+            $object->{self::ERROR_SYMBOL} = array_map(static function (array $error): array {
                 return array_merge(
                     $error,
-                    isset($error['path']) ? ['path' => array_slice($error['path'], 1)] : []
+                    isset($error['path']) ? ['path' => array_slice($error['path'], 1)] : [],
                 );
             }, $childrenErrors);
+
             return $object;
         }
 
@@ -70,9 +67,9 @@ class Errors
      *
      * @return mixed[]
      */
-    public static function getErrorsFromParent(array $object, string $fieldName) : array
+    public static function getErrorsFromParent(array $object, string $fieldName): array
     {
-        $errors         = $object[static::ERROR_SYMBOL] ?? [];
+        $errors         = $object[self::ERROR_SYMBOL] ?? [];
         $childrenErrors = [];
 
         foreach ($errors as $error) {
@@ -81,11 +78,13 @@ class Errors
                     'kind' => 'OWN',
                     'error' => $error,
                 ];
-            } else {
-                if ($error['path'][0] === $fieldName) {
-                    $childrenErrors[] = $error;
-                }
             }
+
+            if ($error['path'][0] !== $fieldName) {
+                continue;
+            }
+
+            $childrenErrors[] = $error;
         }
 
         return [
@@ -94,10 +93,7 @@ class Errors
         ];
     }
 
-    /**
-     * @return mixed
-     */
-    public static function checkResultAndHandleErrors(ExecutionResult $result, ResolveInfo $info, ?string $responseKey)
+    public static function checkResultAndHandleErrors(ExecutionResult $result, ResolveInfo $info, string|null $responseKey): mixed
     {
         if (! $responseKey) {
             $responseKey = GetResponseKeyFromInfo::invoke($info);
@@ -110,14 +106,13 @@ class Errors
                 $message  = static::concatErrors($result->errors);
                 $newError = new class ($message, $result->errors) extends Error {
                     /** @var Error[] */
-                    public $errors;
+                    public array $errors;
 
-                    /**
-                     * @param Error[] $errors
-                     */
+                    /** @param Error[] $errors */
                     public function __construct(string $message, array $errors)
                     {
                         parent::__construct($message);
+
                         $this->errors = $errors;
                     }
                 };
@@ -126,8 +121,9 @@ class Errors
             $locatedError = Error::createLocatedError(
                 $newError,
                 $info->fieldNodes,
-                $info->path
+                $info->path,
             );
+
             throw $locatedError;
         }
 
@@ -140,17 +136,15 @@ class Errors
         return $resultObject;
     }
 
-    /**
-     * @param Error[] $errors
-     */
-    protected static function concatErrors(array $errors) : string
+    /** @param Error[] $errors */
+    protected static function concatErrors(array $errors): string
     {
-        return implode('\n', array_map(static function (Error $error) : string {
+        return implode('\n', array_map(static function (Error $error): string {
             return $error->message;
         }, $errors));
     }
 
-    protected static function hasResult(Error $error) : bool
+    protected static function hasResult(Error $error): bool
     {
         return isset($error->result)
             || count($error->getExtensions()) > 0

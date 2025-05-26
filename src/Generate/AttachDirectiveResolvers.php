@@ -8,14 +8,13 @@ use GraphQL\Executor\Executor;
 use GraphQL\Type\Definition\FieldDefinition;
 use GraphQL\Type\Schema;
 use GraphQLTools\SchemaDirectiveVisitor;
+
 use function call_user_func;
 
 class AttachDirectiveResolvers
 {
-    /**
-     * @param mixed[] $directiveResolvers
-     */
-    public static function invoke(Schema $schema, array $directiveResolvers) : void
+    /** @param mixed[] $directiveResolvers */
+    public static function invoke(Schema $schema, array $directiveResolvers): void
     {
         $schemaDirectives = [];
         foreach ($directiveResolvers as $directiveName => $resolver) {
@@ -28,10 +27,8 @@ class AttachDirectiveResolvers
                     $this->resolver = $resolver;
                 }
 
-                /**
-                 * @param mixed[] $details
-                 */
-                public function visitFieldDefinition(FieldDefinition $field, array $details) : void
+                /** @param mixed[] $details */
+                public function visitFieldDefinition(FieldDefinition $field, array $details): void
                 {
                     $resolver         = $this->resolver;
                     $originalResolver = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
@@ -48,7 +45,7 @@ class AttachDirectiveResolvers
                             $source,
                             $directiveArgs,
                             $context,
-                            $info
+                            $info,
                         );
                     };
                 }

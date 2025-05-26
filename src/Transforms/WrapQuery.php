@@ -9,6 +9,7 @@ use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\Visitor;
+
 use function array_pop;
 use function array_shift;
 use function count;
@@ -21,15 +22,10 @@ class WrapQuery implements Transform
     private $wrapper;
     /** @var callable  */
     private $extractor;
-    /** @var string[] */
-    private $path;
 
-    /**
-     * @param string[] $path
-     */
-    public function __construct(array $path, callable $wrapper, callable $extractor)
+    /** @param string[] $path */
+    public function __construct(private array $path, callable $wrapper, callable $extractor)
     {
-        $this->path      = $path;
         $this->wrapper   = $wrapper;
         $this->extractor = $extractor;
     }
@@ -39,7 +35,7 @@ class WrapQuery implements Transform
      *
      * @return mixed[]
      */
-    public function transformRequest(array $originalRequest) : array
+    public function transformRequest(array $originalRequest): array
     {
         $document    = $originalRequest['document'];
         $fieldPath   = [];
@@ -66,22 +62,25 @@ class WrapQuery implements Transform
 
                             $node               = clone$node;
                             $node->selectionSet = $selectionSet;
+
                             return $node;
                         }
+
                         return null;
                     },
-                    'leave' => static function (FieldNode $node) use (&$fieldPath) : void {
+                    'leave' => static function (FieldNode $node) use (&$fieldPath): void {
                         array_pop($fieldPath);
                     },
                 ],
-            ]
+            ],
         );
 
         $originalRequest['document'] = $newDocument;
+
         return $originalRequest;
     }
 
-    public function transformResult(ExecutionResult $originalResult) : ExecutionResult
+    public function transformResult(ExecutionResult $originalResult): ExecutionResult
     {
         $data = $originalResult->data;
         if ($data) {
@@ -94,12 +93,14 @@ class WrapQuery implements Transform
 
                 $data = $data[$next];
             }
+
             $extractor      = $this->extractor;
             $data[$path[0]] = $extractor($data[$path[0]]);
         }
 
         $result       = clone$originalResult;
         $result->data = $data;
+
         return $result;
     }
 }

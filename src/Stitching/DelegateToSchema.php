@@ -27,21 +27,19 @@ use GraphQLTools\Transforms\FilterToSchema;
 use GraphQLTools\Transforms\ReplaceFieldWithFragment;
 use GraphQLTools\Transforms\Transforms;
 use GraphQLTools\Utils;
+
 use function array_merge;
 use function array_values;
+use function assert;
 use function count;
 
 class DelegateToSchema
 {
-    /**
-     * @param mixed[] $options
-     *
-     * @return mixed
-     */
-    public static function invoke(array $options)
+    /** @param mixed[] $options */
+    public static function invoke(array $options): mixed
     {
-        /** @var ResolveInfo $info */
-        $info      = $options['info'];
+        $info = $options['info'];
+        assert($info instanceof ResolveInfo);
         $args      = $options['args'] ?? [];
         $operation = $options['operation'] ?? $info->operation->operation;
 
@@ -51,7 +49,7 @@ class DelegateToSchema
             $info->fieldNodes,
             array_values($info->fragments),
             $info->operation->variableDefinitions,
-            $info->operation->name
+            $info->operation->name,
         );
 
         $rawRequest = [
@@ -61,7 +59,7 @@ class DelegateToSchema
 
         $transforms = array_merge(
             $options['transforms'] ?? [],
-            [new ExpandAbstractTypes($info->schema, $options['schema'])]
+            [new ExpandAbstractTypes($info->schema, $options['schema'])],
         );
 
         if (isset($info->mergeInfo) && count($info->mergeInfo->fragments) > 0) {
@@ -75,13 +73,13 @@ class DelegateToSchema
                 new FilterToSchema($options['schema']),
                 new AddTypenameToAbstract($options['schema']),
                 new CheckResultAndHandleErrors($info, $options['fieldName']),
-            ]
+            ],
         );
 
         if ($info->returnType instanceof EnumType) {
             $transforms = array_merge(
                 $transforms,
-                [new ConvertEnumResponse($info->returnType)]
+                [new ConvertEnumResponse($info->returnType)],
             );
         }
 
@@ -101,9 +99,9 @@ class DelegateToSchema
                     $processedRequest['document'],
                     $info->rootValue,
                     $options['context'] ?? null,
-                    $processedRequest['variables']
+                    $processedRequest['variables'],
                 ),
-                $transforms
+                $transforms,
             );
         }
 
@@ -123,16 +121,16 @@ class DelegateToSchema
     private static function createDocument(
         string $targetField,
         string $targetOperation,
-        $originalSelections,
+        array|NodeList $originalSelections,
         array $fragments,
-        $variables,
-        ?NameNode $operationName
-    ) : DocumentNode {
+        array|NodeList $variables,
+        NameNode|null $operationName,
+    ): DocumentNode {
         $selections = [];
         $args       = [];
 
-        /** @var FieldNode $field */
         foreach ($originalSelections as $field) {
+            assert($field instanceof FieldNode);
             $fieldSelection = $field->selectionSet ? $field->selectionSet->selections : [];
             $selections     = array_merge($selections, Utils::toArray($fieldSelection));
             $args           = array_merge($args, $field->arguments ? Utils::toArray($field->arguments) : []);

@@ -10,17 +10,18 @@ use GraphQL\Executor\Executor;
 use GraphQL\Executor\Promise\Promise;
 use GraphQLTools\Logger;
 use Throwable;
+
 use const PHP_EOL;
 
 class DecorateWithLogger
 {
-    public static function invoke(?callable $fn, Logger $logger, string $hint) : callable
+    public static function invoke(callable|null $fn, Logger $logger, string $hint): callable
     {
         if ($fn === null) {
             $fn = [Executor::class, 'defaultFieldResolver'];
         }
 
-        $logError = static function (Throwable $e) use ($logger, $hint) : void {
+        $logError = static function (Throwable $e) use ($logger, $hint): void {
             $message = $e->getMessage();
             if ($hint) {
                 $message = 'Error in resolver ' . $hint . PHP_EOL . $message;
@@ -37,6 +38,7 @@ class DecorateWithLogger
                 if ($result instanceof Promise) {
                     $result->then(null, static function (Error $reason) use ($logError) {
                         $logError($reason);
+
                         return $reason;
                     });
                 }
@@ -44,6 +46,7 @@ class DecorateWithLogger
                 return $result;
             } catch (Throwable $e) {
                 $logError($e);
+
                 throw $e;
             }
         };

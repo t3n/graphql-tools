@@ -7,6 +7,7 @@ namespace GraphQLTools\Generate;
 use GraphQL\Type\Definition\InterfaceType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
+
 use function array_keys;
 use function array_map;
 use function array_merge;
@@ -19,11 +20,11 @@ class ExtendResolversFromInterfaces
      *
      * @return mixed[]
      */
-    public static function invoke(Schema $schema, array $resolvers) : array
+    public static function invoke(Schema $schema, array $resolvers): array
     {
         $typeNames = array_keys(array_merge(
             $schema->getTypeMap(),
-            $resolvers
+            $resolvers,
         ));
 
         $extendedResolvers = [];
@@ -41,7 +42,7 @@ class ExtendResolversFromInterfaces
                     static function ($resolvers, $iFaceResolvers) {
                         return array_merge($resolvers, $iFaceResolvers);
                     },
-                    $typeResolvers ?? []
+                    $typeResolvers ?? [],
                 );
             } else {
                 if ($typeResolvers) {

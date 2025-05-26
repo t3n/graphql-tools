@@ -19,6 +19,7 @@ use GraphQL\Utils\BlockString;
 use GraphQL\Utils\TypeComparators;
 use IteratorAggregate;
 use ReflectionProperty;
+
 use function array_filter;
 use function array_keys;
 use function array_reverse;
@@ -30,7 +31,7 @@ use function iterator_to_array;
 class Utils
 {
     /** @var string[] */
-    public static $specifiedScalarTypes = [
+    public static array $specifiedScalarTypes = [
         StringType::class,
         IntType::class,
         FloatType::class,
@@ -38,7 +39,7 @@ class Utils
         IDType::class,
     ];
 
-    public static function isSpecifiedScalarType(Type $type) : bool
+    public static function isSpecifiedScalarType(Type $type): bool
     {
         return $type instanceof NamedType &&
             (
@@ -50,7 +51,7 @@ class Utils
             );
     }
 
-    public static function implementsAbstractType(Schema $schema, Type $typeA, Type $typeB) : bool
+    public static function implementsAbstractType(Schema $schema, Type $typeA, Type $typeB): bool
     {
         if ($typeA === $typeB) {
             return true;
@@ -63,15 +64,17 @@ class Utils
         return false;
     }
 
-    private static function getLeadingCommentBlock(Node $node) : ?string
+    private static function getLeadingCommentBlock(Node $node): string|null
     {
         $loc = $node->loc;
         if (! $loc || ! $loc->startToken) {
             return null;
         }
+
         $comments = [];
         $token    = $loc->startToken->prev;
-        while ($token &&
+        while (
+            $token &&
             $token->kind === Token::COMMENT &&
             $token->next && $token->prev &&
             $token->line + 1 === $token->next->line &&
@@ -85,14 +88,13 @@ class Utils
         return implode("\n", array_reverse($comments));
     }
 
-    /**
-     * @param mixed[] $options
-     */
-    public static function getDescription(Node $node, array $options = []) : ?string
+    /** @param mixed[] $options */
+    public static function getDescription(Node $node, array $options = []): string|null
     {
         if (isset($node->description)) {
             return $node->description->value;
         }
+
         if (isset($options['commentDescriptions']) && $options['commentDescriptions']) {
             $rawValue = static::getLeadingCommentBlock($node);
             if ($rawValue !== null) {
@@ -103,41 +105,28 @@ class Utils
         return null;
     }
 
-    /**
-     * @param mixed $array
-     */
-    public static function isNumericArray($array) : bool
+    public static function isNumericArray(mixed $array): bool
     {
         return is_array($array) && (count(array_filter(array_keys($array), 'is_string')) === 0);
     }
 
-    /**
-     * @param mixed $value
-     */
-    public static function forceSet(object $subject, string $propertyName, $value) : void
+    public static function forceSet(object $subject, string $propertyName, mixed $value): void
     {
         $reflection = new ReflectionProperty($subject, $propertyName);
         $reflection->setAccessible(true);
         $reflection->setValue($subject, $value);
     }
 
-    /**
-     * @return mixed
-     */
-    public static function forceGet(object $subject, string $propertyName)
+    public static function forceGet(object $subject, string $propertyName): mixed
     {
         $reflection = new ReflectionProperty($subject, $propertyName);
         $reflection->setAccessible(true);
+
         return $reflection->getValue($subject);
     }
 
-
-    /**
-     * @param mixed $arrayLike
-     *
-     * @return mixed[]
-     */
-    public static function toArray($arrayLike) : array
+    /** @return mixed[] */
+    public static function toArray(mixed $arrayLike): array
     {
         if ($arrayLike instanceof IteratorAggregate) {
             return iterator_to_array($arrayLike->getIterator());

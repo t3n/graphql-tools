@@ -9,10 +9,8 @@ use PHPUnit\Framework\TestCase;
 
 class CanSpecifyLexicalParserOptionsTest extends TestCase
 {
-    /**
-     * @see it("can specify 'noLocation' option")
-     */
-    public function testCanSpecifyNoLocationOption() : void
+    /** @see it("can specify 'noLocation' option") */
+    public function testCanSpecifyNoLocationOption(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => '
@@ -30,10 +28,8 @@ class CanSpecifyLexicalParserOptionsTest extends TestCase
         static::assertNull($schema->getAstNode()->loc);
     }
 
-    /**
-     * @see it("can specify 'experimentalFragmentVariables' option")
-     */
-    public function testCanSpecifyExperimentalFragmentVariablesOption() : void
+    /** @see it("can specify 'experimentalFragmentVariables' option") */
+    public function testCanSpecifyExperimentalFragmentVariablesOption(): void
     {
         $typeDefs = '
             type Hello {

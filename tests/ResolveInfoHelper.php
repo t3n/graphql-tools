@@ -10,10 +10,8 @@ use GraphQL\Type\Schema;
 
 class ResolveInfoHelper
 {
-    /**
-     * @param mixed[] $options
-     */
-    public static function createResolveInfo(array $options) : ResolveInfo
+    /** @param mixed[] $options */
+    public static function createResolveInfo(array $options): ResolveInfo
     {
         return new ResolveInfo(
             $options['fieldName'] ?? '',
@@ -25,7 +23,7 @@ class ResolveInfoHelper
             $options['fragments'] ?? [],
             $options['rootValue'] ?? null,
             $options['operation'] ?? null,
-            $options['variableValues'] ?? []
+            $options['variableValues'] ?? [],
         );
     }
 }

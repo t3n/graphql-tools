@@ -8,19 +8,18 @@ use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\Visitor;
 use GraphQL\Language\VisitorOperation;
+
 use function array_pop;
 use function json_encode;
 
 class ExtractField implements Transform
 {
     /** @var string[]  */
-    private $from;
+    private array $from;
     /** @var string[] */
-    private $to;
+    private array $to;
 
-    /**
-     * @param string[][] $options
-     */
+    /** @param string[][] $options */
     public function __construct(array $options)
     {
         $this->from = $options['from'];
@@ -32,7 +31,7 @@ class ExtractField implements Transform
      *
      * @return mixed[]
      */
-    public function transformRequest(array $originalRequest) : array
+    public function transformRequest(array $originalRequest): array
     {
         $fromSelection = null;
         $ourPathFrom   = json_encode($this->from);
@@ -50,16 +49,17 @@ class ExtractField implements Transform
 
                             $o          = new VisitorOperation();
                             $o->doBreak = true;
+
                             return $o;
                         }
 
                         return null;
                     },
-                    'leave' => static function (FieldNode $node) use (&$fieldPath) : void {
+                    'leave' => static function (FieldNode $node) use (&$fieldPath): void {
                         array_pop($fieldPath);
                     },
                 ],
-            ]
+            ],
         );
 
         $fieldPath   = [];
@@ -73,18 +73,21 @@ class ExtractField implements Transform
                         if ($ourPathTo === json_encode($fieldPath) && isset($fromSelection)) {
                             $node               = clone$node;
                             $node->selectionSet = $fromSelection;
+
                             return $node;
                         }
+
                         return null;
                     },
-                    'leave' => static function (FieldNode $node) use (&$fieldPath) : void {
+                    'leave' => static function (FieldNode $node) use (&$fieldPath): void {
                         array_pop($fieldPath);
                     },
                 ],
-            ]
+            ],
         );
 
         $originalRequest['document'] = $newDocument;
+
         return $originalRequest;
     }
 }

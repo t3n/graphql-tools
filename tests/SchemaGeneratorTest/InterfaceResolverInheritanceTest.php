@@ -10,10 +10,8 @@ use PHPUnit\Framework\TestCase;
 
 class InterfaceResolverInheritanceTest extends TestCase
 {
-    /**
-     * @see it('copies resolvers from the interfaces')
-     */
-    public function testCopiesResolversFromTheInterfaces() : void
+    /** @see it('copies resolvers from the interfaces') */
+    public function testCopiesResolversFromTheInterfaces(): void
     {
         $testSchemaWithInterfaceResolvers = '
             interface Node {
@@ -81,10 +79,8 @@ class InterfaceResolverInheritanceTest extends TestCase
         ], $response->toArray());
     }
 
-    /**
-     * @see it('respects interface order and existing resolvers')
-     */
-    public function testRespectsInterfaceOrderAndExistingResolvers() : void
+    /** @see it('respects interface order and existing resolvers') */
+    public function testRespectsInterfaceOrderAndExistingResolvers(): void
     {
         $testSchemaWithInterfaceResolvers = '
             interface Node {

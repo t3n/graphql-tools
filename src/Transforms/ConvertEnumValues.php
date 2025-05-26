@@ -6,22 +6,17 @@ namespace GraphQLTools\Transforms;
 
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Schema;
+
 use function count;
 
 class ConvertEnumValues implements Transform
 {
-    /** @var mixed[]|null */
-    private $enumValueMap;
-
-    /**
-     * @param mixed[]|null $enumValueMap
-     */
-    public function __construct(?array $enumValueMap = null)
+    /** @param mixed[]|null $enumValueMap */
+    public function __construct(private array|null $enumValueMap = null)
     {
-        $this->enumValueMap = $enumValueMap;
     }
 
-    public function transformSchema(Schema $schema) : Schema
+    public function transformSchema(Schema $schema): Schema
     {
         $enumValueMap = $this->enumValueMap;
         if (! $enumValueMap || count($enumValueMap) === 0) {

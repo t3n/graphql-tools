@@ -6,7 +6,7 @@ namespace GraphQLTools\Tests\AlternateMergeSchemasTest;
 
 class LinkSchema
 {
-    public static function get() : string
+    public static function get(): string
     {
         return '
             """

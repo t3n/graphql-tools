@@ -23,6 +23,7 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use GraphQL\Utils\TypeInfo;
 use GraphQLTools\Utils;
+
 use function array_filter;
 use function array_map;
 use function array_merge;
@@ -32,16 +33,13 @@ use function sprintf;
 
 class ExpandAbstractTypes implements Transform
 {
-    /** @var Schema */
-    private $targetSchema;
     /** @var array|string[][]  */
-    private $mapping;
+    private array $mapping;
     /** @var array|string[]  */
-    private $reverseMapping;
+    private array $reverseMapping;
 
-    public function __construct(Schema $transformedSchema, Schema $targetSchema)
+    public function __construct(Schema $transformedSchema, private Schema $targetSchema)
     {
-        $this->targetSchema   = $targetSchema;
         $this->mapping        = static::extractPossibleTypes($transformedSchema, $targetSchema);
         $this->reverseMapping = static::flipMapping($this->mapping);
     }
@@ -51,23 +49,22 @@ class ExpandAbstractTypes implements Transform
      *
      * @return mixed[]
      */
-    public function transformRequest(array $originalRequest) : array
+    public function transformRequest(array $originalRequest): array
     {
         $document = static::expandAbstractTypes(
             $this->targetSchema,
             $this->mapping,
             $this->reverseMapping,
-            $originalRequest['document']
+            $originalRequest['document'],
         );
 
         $originalRequest['document'] = $document;
+
         return $originalRequest;
     }
 
-    /**
-     * @return string[][]
-     */
-    private static function extractPossibleTypes(Schema $transformedSchema, Schema $targetSchema) : array
+    /** @return string[][] */
+    private static function extractPossibleTypes(Schema $transformedSchema, Schema $targetSchema): array
     {
         $typeMap = $transformedSchema->getTypeMap();
         $mapping = [];
@@ -78,7 +75,7 @@ class ExpandAbstractTypes implements Transform
 
             try {
                 $targetType = $targetSchema->getType($typeName);
-            } catch (Error $error) {
+            } catch (Error) {
                 $targetType = null;
             }
 
@@ -88,15 +85,15 @@ class ExpandAbstractTypes implements Transform
 
             $implementations    = $targetType ? $transformedSchema->getPossibleTypes($type) : [];
             $mapping[$typeName] = array_map(
-                static function (ObjectType $impl) : string {
+                static function (ObjectType $impl): string {
                     return $impl->name;
                 },
                 array_filter(
                     $implementations,
-                    static function (ObjectType $impl) use ($targetSchema) : bool {
+                    static function (ObjectType $impl) use ($targetSchema): bool {
                         return $targetSchema->getType($impl) !== null;
-                    }
-                )
+                    },
+                ),
             );
         }
 
@@ -108,7 +105,7 @@ class ExpandAbstractTypes implements Transform
      *
      * @return string[]
      */
-    private static function flipMapping(array $mapping) : array
+    private static function flipMapping(array $mapping): array
     {
         $result = [];
         foreach ($mapping as $typeName => $toTypeNames) {
@@ -116,9 +113,11 @@ class ExpandAbstractTypes implements Transform
                 if (! isset($result[$toTypeName])) {
                     $result[$toTypeName] = [];
                 }
+
                 $result[$toTypeName][] = $typeName;
             }
         }
+
         return $result;
     }
 
@@ -130,8 +129,8 @@ class ExpandAbstractTypes implements Transform
         Schema $targetSchema,
         array $mapping,
         array $reverseMapping,
-        DocumentNode $document
-    ) : DocumentNode {
+        DocumentNode $document,
+    ): DocumentNode {
         $operations = array_filter($document->definitions, static function (DefinitionNode $def) {
             return $def instanceof OperationDefinitionNode;
         });
@@ -150,6 +149,7 @@ class ExpandAbstractTypes implements Transform
                 $fragmentName = sprintf('_%s_Fragment%s', $typeName, $fragmentCounter);
                 $fragmentCounter++;
             } while (in_array($fragmentName, $existingFragmentNames));
+
             return $fragmentName;
         };
 
@@ -187,6 +187,7 @@ class ExpandAbstractTypes implements Transform
         $newDocument->definitions = array_merge($operations, $newFragments);
 
         $typeInfo = new TypeInfo($targetSchema);
+
         return Visitor::visit(
             $newDocument,
             Visitor::visitWithTypeInfo(
@@ -197,8 +198,8 @@ class ExpandAbstractTypes implements Transform
                         $mapping,
                         $targetSchema,
                         $fragmentReplacements,
-                        $reverseMapping
-                    ) : ?SelectionSetNode {
+                        $reverseMapping,
+                    ): SelectionSetNode|null {
                         $newSelections = $node->selections;
                         $parentType    = Type::getNamedType($typeInfo->getParentType());
 
@@ -207,11 +208,12 @@ class ExpandAbstractTypes implements Transform
                                 $possibleTypes = $mapping[$selection->typeCondition->name->value] ?? null;
                                 if ($possibleTypes) {
                                     foreach ($possibleTypes as $possibleType) {
-                                        if (! Utils::implementsAbstractType(
-                                            $targetSchema,
-                                            $parentType,
-                                            $targetSchema->getType($possibleType)
-                                        )
+                                        if (
+                                            ! Utils::implementsAbstractType(
+                                                $targetSchema,
+                                                $parentType,
+                                                $targetSchema->getType($possibleType),
+                                            )
                                         ) {
                                             continue;
                                         }
@@ -230,11 +232,12 @@ class ExpandAbstractTypes implements Transform
                                 if ($replacements) {
                                     foreach ($replacements as $replacement) {
                                         $typeName = $replacement['typeName'];
-                                        if (! Utils::implementsAbstractType(
-                                            $targetSchema,
-                                            $parentType,
-                                            $targetSchema->getType($typeName)
-                                        )
+                                        if (
+                                            ! Utils::implementsAbstractType(
+                                                $targetSchema,
+                                                $parentType,
+                                                $targetSchema->getType($typeName),
+                                            )
                                         ) {
                                             continue;
                                         }
@@ -258,14 +261,15 @@ class ExpandAbstractTypes implements Transform
                         if (count($newSelections) !== count($node->selections)) {
                             $node             = clone$node;
                             $node->selections = $newSelections;
+
                             return $node;
                         }
 
                         return null;
                     },
 
-                ]
-            )
+                ],
+            ),
         );
     }
 }

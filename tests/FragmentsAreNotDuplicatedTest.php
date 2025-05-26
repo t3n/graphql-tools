@@ -12,14 +12,12 @@ use PHPUnit\Framework\TestCase;
 
 class FragmentsAreNotDuplicatedTest extends TestCase
 {
-    /** @var string */
-    protected $rawSchema;
-    /** @var string */
-    protected $query;
+    protected string $rawSchema;
+    protected string $query;
     /** @var mixed[] */
-    protected $variables;
+    protected array $variables;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -65,7 +63,7 @@ class FragmentsAreNotDuplicatedTest extends TestCase
         $this->variables = ['id' => 123];
     }
 
-    private static function assertNoDuplicateFragmentErrors(ExecutionResult $result) : void
+    private static function assertNoDuplicateFragmentErrors(ExecutionResult $result): void
     {
         // Run assertion against each array element for better test failure output.
 
@@ -74,10 +72,8 @@ class FragmentsAreNotDuplicatedTest extends TestCase
         }
     }
 
-    /**
-     * @see it('should not throw `There can be only one fragment named "FieldName"` errors')
-     */
-    public function testShouldNotThrowThereCanBeOnlyOneFragmentNamedFieldNameErrors() : void
+    /** @see it('should not throw `There can be only one fragment named "FieldName"` errors') */
+    public function testShouldNotThrowThereCanBeOnlyOneFragmentNamedFieldNameErrors(): void
     {
         $originalSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->rawSchema,

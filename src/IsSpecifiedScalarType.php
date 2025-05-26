@@ -15,7 +15,7 @@ use GraphQL\Type\Definition\Type;
 class IsSpecifiedScalarType
 {
     /** @var string[] */
-    public static $specifiedScalarTypes = [
+    public static array $specifiedScalarTypes = [
         StringType::class,
         IntType::class,
         FloatType::class,
@@ -23,10 +23,7 @@ class IsSpecifiedScalarType
         IDType::class,
     ];
 
-    /**
-     * @param mixed $type
-     */
-    public static function invoke($type) : bool
+    public static function invoke(mixed $type): bool
     {
         if (! $type instanceof NamedType) {
             return false;
