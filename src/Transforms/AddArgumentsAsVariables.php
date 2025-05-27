@@ -13,6 +13,7 @@ use GraphQL\Language\AST\FragmentDefinitionNode;
 use GraphQL\Language\AST\ListTypeNode;
 use GraphQL\Language\AST\NamedTypeNode;
 use GraphQL\Language\AST\NameNode;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\NonNullTypeNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionNode;
@@ -22,7 +23,6 @@ use GraphQL\Language\AST\VariableDefinitionNode;
 use GraphQL\Language\AST\VariableNode;
 use GraphQL\Type\Definition\InputType;
 use GraphQL\Type\Definition\NonNull;
-use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
 use GraphQLTools\Utils;
 
@@ -31,7 +31,6 @@ use function array_keys;
 use function array_map;
 use function array_merge;
 use function array_values;
-use function assert;
 use function in_array;
 use function sprintf;
 
@@ -92,7 +91,6 @@ class AddArgumentsAsVariables implements Transform
                     &$variableCounter,
                     $existingVariables,
                 ): string {
-                    $varName = null;
                     do {
                         $varName = sprintf('_v%s_%s', $variableCounter, $argName);
                         $variableCounter++;
@@ -101,8 +99,6 @@ class AddArgumentsAsVariables implements Transform
                     return $varName;
                 };
 
-                $type = null;
-                assert($type instanceof ObjectType);
                 if ($operation->operation === 'subscription') {
                     $type = $targetSchema->getSubscriptionType();
                 } elseif ($operation->operation === 'mutation') {
@@ -160,7 +156,7 @@ class AddArgumentsAsVariables implements Transform
                     Utils::toArray($operation->variableDefinitions),
                     array_values($variables),
                 );
-                $operation->selectionSet        = new SelectionSetNode(['selections' => $newSelectionSet]);
+                $operation->selectionSet        = new SelectionSetNode(['selections' => NodeList::create($newSelectionSet)]);
 
                 return $operation;
             },

@@ -74,7 +74,7 @@ class TypeFromAST
             'interfaces' => static function () use ($node) {
                 return array_map(static function (NamedTypeNode $iface) {
                     return static::createNamedStub($iface->name->value, 'interface');
-                }, $node->interfaces);
+                }, Utils::toArray($node->interfaces));
             },
             'description' => Utils::getDescription($node, static::$backcompatOptions),
         ]);
@@ -117,7 +117,7 @@ class TypeFromAST
             'types' => static function () use ($node) {
                 return array_map(static function (NamedTypeNode $type) {
                     return static::resolveType($type, 'object');
-                }, $node->types);
+                }, Utils::toArray($node->types));
             },
             'description' => Utils::getDescription($node, static::$backcompatOptions),
             'resolveType' => static function ($parent, $context, $info) {
@@ -148,7 +148,7 @@ class TypeFromAST
         return new InputObjectType([
             'name' => $node->name->value,
             'fields' => static function () use ($node) {
-                return static::makeValues($node->fields);
+                return static::makeValues(Utils::toArray($node->fields));
             },
             'description' => Utils::getDescription($node, static::$backcompatOptions),
         ]);

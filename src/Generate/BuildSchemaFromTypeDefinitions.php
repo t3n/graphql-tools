@@ -11,7 +11,6 @@ use GraphQL\Type\Schema;
 use GraphQL\Utils\BuildSchema;
 use GraphQL\Utils\SchemaExtender;
 
-use function assert;
 use function count;
 use function gettype;
 use function is_array;
@@ -29,11 +28,10 @@ class BuildSchemaFromTypeDefinitions
      * @param string|string[]|DocumentNode $typeDefinitions
      * @param mixed[]|null                 $parseOptions
      */
-    public static function invoke(string|array|DocumentNode $typeDefinitions, array|null $parseOptions = null): Schema
+    public static function invoke(mixed $typeDefinitions, array|null $parseOptions = null): Schema
     {
         $myDefinitions = $typeDefinitions;
         $astDocument   = null;
-        assert($astDocument instanceof DocumentNode);
 
         if (static::isDocumentNode($typeDefinitions)) {
             $astDocument = $typeDefinitions;

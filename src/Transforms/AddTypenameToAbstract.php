@@ -8,6 +8,7 @@ use GraphQL\Language\AST\DocumentNode;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeKind;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\SelectionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\Visitor;
@@ -52,12 +53,13 @@ class AddTypenameToAbstract implements Transform
                 $typeInfo,
                 [
                     NodeKind::SELECTION_SET => static function (SelectionSetNode $node) use ($typeInfo) {
-                        $parentType = $typeInfo->getParentType();
-                        $selections = Utils::toArray($node->selections);
+                        $parentType    = $typeInfo->getParentType();
+                        $selections    = Utils::toArray($node->selections);
+                        $newSelections = $selections;
 
                         $typenameFound = count(
                             array_filter(
-                                $selections,
+                                $newSelections,
                                 static function (SelectionNode $selectionNode) {
                                     return $selectionNode instanceof FieldNode
                                         && $selectionNode->name->value === '__typename';
@@ -69,14 +71,14 @@ class AddTypenameToAbstract implements Transform
                             && ($parentType instanceof InterfaceType || $parentType instanceof UnionType)
                             && ! $typenameFound
                         ) {
-                            $selections[] = new FieldNode([
+                            $newSelections[] = new FieldNode([
                                 'name' => new NameNode(['value' => '__typename']),
                             ]);
                         }
 
-                        if ($selections !== $node->selections) {
+                        if ($newSelections !== $selections) {
                             $transformedNode             = clone$node;
-                            $transformedNode->selections = $selections;
+                            $transformedNode->selections = NodeList::create($newSelections);
 
                             return $transformedNode;
                         }

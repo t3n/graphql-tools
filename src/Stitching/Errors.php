@@ -140,7 +140,7 @@ class Errors
     protected static function concatErrors(array $errors): string
     {
         return implode('\n', array_map(static function (Error $error): string {
-            return $error->message;
+            return $error->getMessage();
         }, $errors));
     }
 

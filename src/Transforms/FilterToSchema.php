@@ -181,7 +181,7 @@ class FilterToSchema implements Transform
             );
 
             $fragment = array_values($fragments)[0] ?? null;
-            assert($fragment instanceof FragmentDefinitionNode);
+            assert($fragment instanceof FragmentDefinitionNode || $fragment === null);
 
             if (! $fragment) {
                 continue;
@@ -324,8 +324,9 @@ class FilterToSchema implements Transform
                 ) {
                     if (isset($validFragments[$node->name->value])) {
                         $parentType = static::resolveType($typeStack[count($typeStack) - 1]);
+                        $innerType  = $validFragments[$node->name->value];
                         assert($parentType instanceof Type);
-                        $innerType = $validFragments[$node->name->value];
+                        assert($innerType instanceof Type);
 
                         if (! Utils::implementsAbstractType($schema, $parentType, $innerType)) {
                             return Visitor::removeNode();
@@ -346,6 +347,7 @@ class FilterToSchema implements Transform
 
                         $innerType  = $schema->getType($node->typeCondition->name->value);
                         $parentType = static::resolveType($typeStack[count($typeStack) - 1]);
+                        assert($innerType instanceof Type);
                         assert($parentType instanceof Type);
                         if (Utils::implementsAbstractType($schema, $parentType, $innerType)) {
                             $typeStack[] = $innerType;

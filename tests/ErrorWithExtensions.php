@@ -10,6 +10,6 @@ class ErrorWithExtensions extends Error
 {
     public function __construct(string $message, string $code)
     {
-        parent::__construct($message, null, null, null, null, null, ['code' => $code]);
+        parent::__construct($message, null, null, [], null, null, ['code' => $code]);
     }
 }

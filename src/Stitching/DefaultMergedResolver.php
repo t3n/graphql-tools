@@ -27,7 +27,7 @@ class DefaultMergedResolver
 
         if ($errorResult['kind'] === 'OWN') {
             $error = Error::createLocatedError(
-                new Error($errorResult['error']->message),
+                new Error($errorResult['error']->getMessage()),
                 $info->fieldNodes,
                 $info->path,
             );

@@ -68,7 +68,7 @@ class TransformRootFields implements Transform
             } elseif ($newField !== false) {
                 $newFields[$newField['name']] = $newField['field'];
             } else {
-                unset($newField[$fieldName]);
+                unset($newFields[$fieldName]);
             }
         }
 

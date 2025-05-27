@@ -18,7 +18,9 @@ use GraphQL\Type\Schema;
 use GraphQL\Utils\BlockString;
 use GraphQL\Utils\TypeComparators;
 use IteratorAggregate;
+use ReflectionClass;
 use ReflectionProperty;
+use RuntimeException;
 
 use function array_filter;
 use function array_keys;
@@ -112,17 +114,42 @@ class Utils
 
     public static function forceSet(object $subject, string $propertyName, mixed $value): void
     {
-        $reflection = new ReflectionProperty($subject, $propertyName);
+        $reflection = self::getReflectionProperty($subject, $propertyName);
+
+        if ($reflection === null) {
+            throw new RuntimeException("Property '{$propertyName}' does not exist.");
+        }
+
         $reflection->setAccessible(true);
         $reflection->setValue($subject, $value);
     }
 
     public static function forceGet(object $subject, string $propertyName): mixed
     {
-        $reflection = new ReflectionProperty($subject, $propertyName);
+        $reflection = self::getReflectionProperty($subject, $propertyName);
+
+        if ($reflection === null) {
+            throw new RuntimeException("Property '{$propertyName}' does not exist.");
+        }
+
         $reflection->setAccessible(true);
 
         return $reflection->getValue($subject);
+    }
+
+    private static function getReflectionProperty(object $subject, string $propertyName): ReflectionProperty|null
+    {
+        $class = new ReflectionClass($subject);
+
+        do {
+            if ($class->hasProperty($propertyName)) {
+                return $class->getProperty($propertyName);
+            }
+
+            $class = $class->getParentClass();
+        } while ($class);
+
+        return null;
     }
 
     /** @return mixed[] */

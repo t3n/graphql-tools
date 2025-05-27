@@ -13,12 +13,12 @@ use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\NamedTypeNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeKind;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\Parser;
 use GraphQL\Language\Visitor;
-use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use GraphQL\Utils\TypeInfo;
 use GraphQLTools\Utils;
@@ -87,7 +87,6 @@ class ReplaceFieldWithFragment implements Transform
                 [
                     NodeKind::SELECTION_SET => static function (SelectionSetNode $node) use ($typeInfo, $mapping) {
                         $parentType = $typeInfo->getParentType();
-                        assert($parentType instanceof Type);
 
                         if ($parentType) {
                             $parentTypeName = $parentType->name;
@@ -113,9 +112,9 @@ class ReplaceFieldWithFragment implements Transform
                                 }
                             }
 
-                            if ($selections !== $node->selections) {
+                            if (count($selections) !== count($node->selections)) {
                                 $node             = clone $node;
-                                $node->selections = array_values($selections);
+                                $node->selections = NodeList::create(array_values($selections));
 
                                 return $node;
                             }
@@ -171,7 +170,7 @@ class ReplaceFieldWithFragment implements Transform
             'typeCondition' => new NamedTypeNode([
                 'name' => new NameNode(['value' => $type]),
             ]),
-            'selectionSet' => new SelectionSetNode(['selections' => $deduplicatedFragmentSelection]),
+            'selectionSet' => new SelectionSetNode(['selections' => NodeList::create($deduplicatedFragmentSelection)]),
         ]);
     }
 

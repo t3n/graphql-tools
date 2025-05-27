@@ -28,7 +28,7 @@ class AttachDirectiveResolvers
                 }
 
                 /** @param mixed[] $details */
-                public function visitFieldDefinition(FieldDefinition $field, array $details): void
+                public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                 {
                     $resolver         = $this->resolver;
                     $originalResolver = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
@@ -48,6 +48,8 @@ class AttachDirectiveResolvers
                             $info,
                         );
                     };
+
+                    return null;
                 }
             };
         }

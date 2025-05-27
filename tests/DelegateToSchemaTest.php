@@ -15,7 +15,7 @@ class DelegateToSchemaTest extends TestCase
      *
      * @return mixed[]
      */
-    protected static function findPropertyByLocationName(array $properties, string $name): array
+    protected static function findPropertyByLocationName(array $properties, string $name): array|null
     {
         foreach ($properties as $key => $property) {
             if ($property['location']['name'] === $name) {
@@ -104,6 +104,7 @@ class DelegateToSchemaTest extends TestCase
         );
 
         $coordinates = TestingSchemas::$sampleData['Property']['p1']['location']['coordinates'];
+
         static::assertEquals(
             [
                 'data' => [

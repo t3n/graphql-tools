@@ -14,6 +14,7 @@ use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\NamedTypeNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeKind;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\Visitor;
@@ -200,7 +201,7 @@ class ExpandAbstractTypes implements Transform
                         $fragmentReplacements,
                         $reverseMapping,
                     ): SelectionSetNode|null {
-                        $newSelections = $node->selections;
+                        $newSelections = Utils::toArray($node->selections);
                         $parentType    = Type::getNamedType($typeInfo->getParentType());
 
                         foreach ($node->selections as $selection) {
@@ -260,7 +261,7 @@ class ExpandAbstractTypes implements Transform
 
                         if (count($newSelections) !== count($node->selections)) {
                             $node             = clone$node;
-                            $node->selections = $newSelections;
+                            $node->selections = NodeList::create($newSelections);
 
                             return $node;
                         }

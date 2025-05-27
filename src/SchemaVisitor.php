@@ -67,52 +67,62 @@ class SchemaVisitor
         return $operation;
     }
 
-    public function visitSchema(Schema $schema): mixed
+    public function visitSchema(Schema $schema): void
     {
     }
 
     public function visitScalar(ScalarType $scalar): mixed
     {
+        return $scalar;
     }
 
     public function visitObject(ObjectType $object): mixed
     {
+        return $object;
     }
 
     /** @param mixed[] $details */
     public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
     {
+        return $field;
     }
 
     /** @param mixed[] $details */
     public function visitArgumentDefinition(FieldArgument $argument, array $details): mixed
     {
+        return $argument;
     }
 
     public function visitInterface(InterfaceType $iface): mixed
     {
+        return $iface;
     }
 
     public function visitUnion(UnionType $union): mixed
     {
+        return $union;
     }
 
     public function visitEnum(EnumType $type): mixed
     {
+        return $type;
     }
 
     /** @param mixed[] $details */
     public function visitEnumValue(EnumValueDefinition $value, array $details): mixed
     {
+        return $value;
     }
 
     public function visitInputObject(InputObjectType $object): mixed
     {
+        return $object;
     }
 
     /** @param mixed[] $details */
     public function visitInputFieldDefinition(InputObjectField $field, array $details): mixed
     {
+        return $field;
     }
 
     public static function doVisitSchema(Schema $schema, callable $visitorSelector): Schema
@@ -178,7 +188,7 @@ class SchemaVisitor
 
             if ($type instanceof InputObjectType) {
                 $newInputObject = $callMethod('visitInputObject', $type);
-                assert($newInputObject instanceof InputObjectType);
+                assert($newInputObject instanceof InputObjectType || $newInputObject === null);
 
                 if ($newInputObject) {
                     $fields = $newInputObject->getFields();
@@ -201,7 +211,7 @@ class SchemaVisitor
 
             if ($type instanceof EnumType) {
                 $newEnum = $callMethod('visitEnum', $type);
-                assert($newEnum instanceof EnumType);
+                assert($newEnum instanceof EnumType || $newEnum === null);
 
                 if ($newEnum) {
                     $values = $newEnum->getValues();
@@ -240,6 +250,7 @@ class SchemaVisitor
 
                 return $newField;
             });
+
             Utils::forceSet($type, 'fields', $fields);
         };
 

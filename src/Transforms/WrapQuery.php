@@ -7,6 +7,7 @@ namespace GraphQLTools\Transforms;
 use GraphQL\Executor\ExecutionResult;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\NodeKind;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\Visitor;
 
@@ -57,7 +58,7 @@ class WrapQuery implements Transform
                                 || (is_array($wrapResult) && $wrapResult['kind'] === NodeKind::SELECTION_SET)
                                 ? $wrapResult
                                 : new SelectionSetNode([
-                                    'selections' => [$wrapResult],
+                                    'selections' => NodeList::create([$wrapResult]),
                                 ]);
 
                             $node               = clone$node;

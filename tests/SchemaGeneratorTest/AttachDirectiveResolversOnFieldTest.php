@@ -13,7 +13,6 @@ use GraphQLTools\GraphQLTools;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
-use function assert;
 use function is_string;
 use function React\Promise\resolve;
 use function strtolower;
@@ -155,7 +154,6 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         $expected = ['hello' => 'GIAU. TRAN MINH'];
 
         $res = null;
-        assert($res instanceof ExecutionResult);
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
             ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
@@ -184,7 +182,6 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         ];
 
         $res = null;
-        assert($res instanceof ExecutionResult);
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
             ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
@@ -209,7 +206,6 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         $expected = ['withDefault' => 'some default_value'];
 
         $res = null;
-        assert($res instanceof ExecutionResult);
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
             ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
@@ -235,7 +231,6 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         $expected = ['hello' => 'giau. tran minh'];
 
         $res = null;
-        assert($res instanceof ExecutionResult);
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
             ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
@@ -259,7 +254,6 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         $expected = ['asyncResolver' => 'GIAU. TRAN MINH'];
 
         $res = null;
-        assert($res instanceof ExecutionResult);
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
             ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
@@ -283,7 +277,6 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         $expected = ['multiDirectives' => 'giau. tran minh'];
 
         $res = null;
-        assert($res instanceof ExecutionResult);
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
             ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
@@ -307,7 +300,6 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         $expected = ['throwError' => 'This error for testing'];
 
         $res = null;
-        assert($res instanceof ExecutionResult);
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
             ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;

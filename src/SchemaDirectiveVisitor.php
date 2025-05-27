@@ -7,7 +7,6 @@ namespace GraphQLTools;
 use Exception;
 use GraphQL\Executor\Values;
 use GraphQL\Type\Definition\Directive;
-use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use GraphQL\Utils\AST;
 
@@ -24,7 +23,7 @@ class SchemaDirectiveVisitor extends SchemaVisitor
     public string $name;
     /** @var mixed[] */
     public array $args;
-    public Type $visitedType;
+    public mixed $visitedType;
     public mixed $context;
 
     /** @param mixed[] $config */

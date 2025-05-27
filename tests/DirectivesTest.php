@@ -249,11 +249,13 @@ class DirectivesTest extends TestCase
                         $this->visitCount = &$visitCount;
                     }
 
-                    public function visitObject(ObjectType $object): void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         $this->visited[] = $object;
 
                         $this->visitCount++;
+
+                        return null;
                     }
                 },
             ],
@@ -319,18 +321,20 @@ class DirectivesTest extends TestCase
             [
                 'mutationTypeDirective' => new class ($mutationObjectType) extends SchemaDirectiveVisitor
                 {
-                    private ObjectType $mutationObjectType;
+                    private ObjectType|null $mutationObjectType;
 
                     public function __construct(ObjectType|null &$mutationObjectType)
                     {
                         $this->mutationObjectType = &$mutationObjectType;
                     }
 
-                    public function visitObject(ObjectType $object): void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         $this->mutationObjectType = $object;
                         TestCase::assertEquals($object, $this->visitedType);
                         TestCase::assertEquals('Mutation', $object->name);
+
+                        return null;
                     }
                 },
                 'mutationMethodDirective' => new class (
@@ -338,8 +342,8 @@ class DirectivesTest extends TestCase
                     $mutationField
                 ) extends SchemaDirectiveVisitor
                 {
-                    private ObjectType $mutationObjectType;
-                    private FieldDefinition $mutationField;
+                    private ObjectType|null $mutationObjectType;
+                    private FieldDefinition|null $mutationField;
 
                     public function __construct(ObjectType|null &$mutationObjectType, FieldDefinition|null &$mutationField)
                     {
@@ -348,7 +352,7 @@ class DirectivesTest extends TestCase
                     }
 
                     /** @param mixed[] $details */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details): void
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         TestCase::assertEquals($field, $this->visitedType);
                         TestCase::assertEquals('addPerson', $field->name);
@@ -356,6 +360,8 @@ class DirectivesTest extends TestCase
                         TestCase::assertEquals(1, count($field->args));
 
                         $this->mutationField = $field;
+
+                        return null;
                     }
                 },
                 'mutationArgumentDirective' => new class (
@@ -363,8 +369,8 @@ class DirectivesTest extends TestCase
                     $mutationField
                 ) extends SchemaDirectiveVisitor
                 {
-                    private ObjectType $mutationObjectType;
-                    private FieldDefinition $mutationField;
+                    private ObjectType|null $mutationObjectType;
+                    private FieldDefinition|null $mutationField;
 
                     public function __construct(ObjectType|null &$mutationObjectType, FieldDefinition|null &$mutationField)
                     {
@@ -373,34 +379,38 @@ class DirectivesTest extends TestCase
                     }
 
                     /** @param mixed[] $details */
-                    public function visitArgumentDefinition(FieldArgument $arg, array $details): void
+                    public function visitArgumentDefinition(FieldArgument $arg, array $details): mixed
                     {
                         TestCase::assertEquals($arg, $this->visitedType);
                         TestCase::assertEquals('input', $arg->name);
                         TestCase::assertEquals($this->mutationField, $details['field']);
                         TestCase::assertEquals($this->mutationObjectType, $details['objectType']);
                         TestCase::assertEquals($arg, $details['field']->args[0]);
+
+                        return null;
                     }
                 },
                 'enumTypeDirective' => new class ($enumObjectType) extends SchemaDirectiveVisitor
                 {
-                    private EnumType $enumObjectType;
+                    private EnumType|null $enumObjectType;
 
                     public function __construct(EnumType|null &$enumObjectType)
                     {
                         $this->enumObjectType = &$enumObjectType;
                     }
 
-                    public function visitEnum(EnumType $enumType): void
+                    public function visitEnum(EnumType $enumType): mixed
                     {
                         TestCase::assertEquals($enumType, $this->visitedType);
                         TestCase::assertEquals('Gender', $enumType->name);
                         $this->enumObjectType = $enumType;
+
+                        return null;
                     }
                 },
                 'enumValueDirective' => new class ($enumObjectType) extends SchemaDirectiveVisitor
                 {
-                    private EnumType $enumObjectType;
+                    private EnumType|null $enumObjectType;
 
                     public function __construct(EnumType|null &$enumObjectType)
                     {
@@ -414,27 +424,31 @@ class DirectivesTest extends TestCase
                         TestCase::assertEquals('NONBINARY', $value->name);
                         TestCase::assertEquals('NONBINARY', $value->value);
                         TestCase::assertEquals($this->enumObjectType, $details['enumType']);
+
+                        return null;
                     }
                 },
                 'inputTypeDirective' => new class ($inputObjectType) extends SchemaDirectiveVisitor
                 {
-                    private InputObjectType $inputObjectType;
+                    private InputObjectType|null $inputObjectType;
 
                     public function __construct(InputObjectType|null &$inputObjectType)
                     {
                         $this->inputObjectType = &$inputObjectType;
                     }
 
-                    public function visitInputObject(InputObjectType $object): void
+                    public function visitInputObject(InputObjectType $object): mixed
                     {
                         $this->inputObjectType = $object;
                         TestCase::assertEquals($object, $this->visitedType);
                         TestCase::assertEquals('PersonInput', $object->name);
+
+                        return null;
                     }
                 },
                 'inputFieldDirective' => new class ($inputObjectType) extends SchemaDirectiveVisitor
                 {
-                    private InputObjectType $inputObjectType;
+                    private InputObjectType|null $inputObjectType;
 
                     public function __construct(InputObjectType|null &$inputObjectType)
                     {
@@ -442,11 +456,13 @@ class DirectivesTest extends TestCase
                     }
 
                     /** @param mixed[] $details */
-                    public function visitInputFieldDefinition(InputObjectField $field, array $details): void
+                    public function visitInputFieldDefinition(InputObjectField $field, array $details): mixed
                     {
                         TestCase::assertEquals($field, $this->visitedType);
                         TestCase::assertEquals('name', $field->name);
                         TestCase::assertEquals($this->inputObjectType, $details['objectType']);
+
+                        return null;
                     }
                 },
             ],
@@ -508,10 +524,12 @@ class DirectivesTest extends TestCase
                 );
             }
 
-            public function visitObject(ObjectType $object): void
+            public function visitObject(ObjectType $object): mixed
             {
                 TestCase::assertEquals($object, $this->schema->getType($object->name));
                 $this->names[] = $object->name;
+
+                return null;
             }
         };
 
@@ -653,14 +671,16 @@ class DirectivesTest extends TestCase
                 return $prev;
             }
 
-            public function visitObject(ObjectType $object): void
+            public function visitObject(ObjectType $object): mixed
             {
                 ++$this->context->objectCount;
                 TestCase::assertEquals(3, $this->args['times']);
+
+                return null;
             }
 
             /** @param mixed[] $details */
-            public function visitFieldDefinition(FieldDefinition $field, array $details): void
+            public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
             {
                 ++$this->context->fieldCount;
                 if ($field->name === 'judge') {
@@ -672,6 +692,8 @@ class DirectivesTest extends TestCase
                 }
 
                 TestCase::assertEquals('IMPARTIAL', $this->args['party']);
+
+                return null;
             }
         };
 
@@ -709,7 +731,7 @@ class DirectivesTest extends TestCase
                 'upper' => new class extends SchemaDirectiveVisitor
                 {
                     /** @param mixed[] $detail */
-                    public function visitFieldDefinition(FieldDefinition $field, array $detail): void
+                    public function visitFieldDefinition(FieldDefinition $field, array $detail): mixed
                     {
                         $resolve          = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $field->resolveFn = static function (...$args) use ($resolve) {
@@ -720,6 +742,8 @@ class DirectivesTest extends TestCase
 
                             return $result;
                         };
+
+                        return null;
                     }
                 },
             ],
@@ -759,7 +783,7 @@ class DirectivesTest extends TestCase
                 'date' => new class extends SchemaDirectiveVisitor
                 {
                     /** @param mixed[] $detail */
-                    public function visitFieldDefinition(FieldDefinition $field, array $detail): void
+                    public function visitFieldDefinition(FieldDefinition $field, array $detail): mixed
                     {
                         $resolve = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $format  = $this->args['format'];
@@ -771,6 +795,8 @@ class DirectivesTest extends TestCase
 
                             return DateTime::createFromFormat(DateTime::ATOM, $date)->format($format);
                         };
+
+                        return null;
                     }
                 },
             ],
@@ -800,7 +826,7 @@ class DirectivesTest extends TestCase
         $formattableDateDirective = new class extends SchemaDirectiveVisitor
         {
             /** @param mixed[] $detail */
-            public function visitFieldDefinition(FieldDefinition $field, array $detail): void
+            public function visitFieldDefinition(FieldDefinition $field, array $detail): mixed
             {
                 $resolve       = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                 $defaultFormat = $this->args['defaultFormat'];
@@ -817,6 +843,8 @@ class DirectivesTest extends TestCase
 
                     return $date->format($format);
                 };
+
+                return null;
             }
         };
 
@@ -899,7 +927,7 @@ class DirectivesTest extends TestCase
                     }
 
                     /** @param mixed[] $details */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details): void
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         $resolve          = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $field->resolveFn = function (...$args) use ($resolve, $details, $field) {
@@ -911,6 +939,8 @@ class DirectivesTest extends TestCase
 
                             return $translate($defaultText, $path, $this->ctx['locale']);
                         };
+
+                        return null;
                     }
                 },
             ],
@@ -974,10 +1004,12 @@ class DirectivesTest extends TestCase
                 $this->getUser = $getUser;
             }
 
-            public function visitObject(ObjectType $type): void
+            public function visitObject(ObjectType $type): mixed
             {
                 $this->ensureFieldsWrapped($type);
                 $type->_requiredAuthRole = $this->args['requires'];
+
+                return null;
             }
 
             // Visitor methods for nested types like fields and arguments
@@ -985,10 +1017,12 @@ class DirectivesTest extends TestCase
             // the parent and grandparent types.
 
             /** @param mixed[] $details */
-            public function visitFieldDefinition(FieldDefinition $field, array $details): void
+            public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
             {
                 $this->ensureFieldsWrapped($details['objectType']);
                 $field->_requiredAuthRole = $this->args['requires'];
+
+                return null;
             }
 
             public function ensureFieldsWrapped(ObjectType $objectType): void
@@ -1187,15 +1221,19 @@ class DirectivesTest extends TestCase
                     }
 
                     /** @param mixed[] $details */
-                    public function visitInputFieldDefinition(InputObjectField $field, array $details): void
+                    public function visitInputFieldDefinition(InputObjectField $field, array $details): mixed
                     {
                         $this->wrapType($field);
+
+                        return null;
                     }
 
                     /** @param mixed[] $details */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details): void
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         $this->wrapType($field);
+
+                        return null;
                     }
 
                     private function wrapType(FieldDefinition|InputObjectField $field): void
@@ -1302,7 +1340,7 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'uniqueID' => new class extends SchemaDirectiveVisitor
                 {
-                    public function visitObject(ObjectType $type): void
+                    public function visitObject(ObjectType $type): mixed
                     {
                         ['name' => $name, 'from' => $from] = $this->args;
                         $fields                            = $type->getFields();
@@ -1321,6 +1359,8 @@ class DirectivesTest extends TestCase
                             },
                         ]);
                         Utils::forceSet($type, 'fields', $fields);
+
+                        return null;
                     }
                 },
             ],
@@ -1392,25 +1432,25 @@ class DirectivesTest extends TestCase
     /** @see it('automatically updates references to changed types') */
     public function testAutomaticallyUpdatesReferencesToChangedTypes(): void
     {
-        $HumanType = null;
+        $humanType = null;
         $schema    = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->typeDefs,
             'schemaDirectives' => [
-                'objectTypeDirective' => new class ($HumanType) extends SchemaDirectiveVisitor
+                'objectTypeDirective' => new class ($humanType) extends SchemaDirectiveVisitor
                 {
-                    private ObjectType $HumanType;
+                    private ObjectType|null $humanType;
 
                     public function __construct(ObjectType|null &$HumanType)
                     {
-                        $this->HumanType = &$HumanType;
+                        $this->humanType = &$HumanType;
                     }
 
                     public function visitObject(ObjectType $object): ObjectType
                     {
-                        $this->HumanType       = clone $object;
-                        $this->HumanType->name = 'Human';
+                        $this->humanType       = clone $object;
+                        $this->humanType->name = 'Human';
 
-                        return $this->HumanType;
+                        return $this->humanType;
                     }
                 },
             ],
@@ -1423,11 +1463,11 @@ class DirectivesTest extends TestCase
             throw new Exception('Query.people not a GraphQLList type');
         }
 
-        static::assertEquals($HumanType, $peopleType->ofType);
+        static::assertEquals($humanType, $peopleType->ofType);
 
         $Mutation            = $schema->getMutationType();
         $addPersonResultType = $Mutation->getField('addPerson')->getType();
-        static::assertEquals($HumanType, $addPersonResultType);
+        static::assertEquals($humanType, $addPersonResultType);
 
         $WhateverUnion = $schema->getType('WhateverUnion');
 
@@ -1437,7 +1477,7 @@ class DirectivesTest extends TestCase
                 continue;
             }
 
-            static::assertEquals($HumanType, $type);
+            static::assertEquals($humanType, $type);
             $found = true;
         }
 
@@ -1515,28 +1555,30 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'rename' => new class extends SchemaDirectiveVisitor
                 {
-                    public function visitObject(ObjectType $object): void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         $object->name = $this->args['to'];
+
+                        return null;
                     }
                 },
             ],
         ]);
 
-        $Human = $schema->getType('Human');
-        assert($Human instanceof ObjectType);
-        static::assertEquals('Human', $Human->name);
-        static::assertEquals(Type::int(), $Human->getField('heightInInches')->getType());
+        $human = $schema->getType('Human');
+        assert($human instanceof ObjectType);
+        static::assertEquals('Human', $human->name);
+        static::assertEquals(Type::int(), $human->getField('heightInInches')->getType());
 
-        $Person = $schema->getType('Person');
-        assert($Person instanceof ObjectType);
-        static::assertEquals('Person', $Person->name);
-        static::assertEquals($schema->getType('Date'), $Person->getField('born')->getType());
+        $person = $schema->getType('Person');
+        assert($person instanceof ObjectType);
+        static::assertEquals('Person', $person->name);
+        static::assertEquals($schema->getType('Date'), $person->getField('born')->getType());
 
-        $Query      = $schema->getQueryType();
-        $peopleType = $Query->getField('people')->getType();
+        $query      = $schema->getQueryType();
+        $peopleType = $query->getField('people')->getType();
         assert($peopleType instanceof ListOfType);
-        static::assertEquals($Human, $peopleType->ofType);
+        static::assertEquals($human, $peopleType->ofType);
     }
 
     /** @see it('does not enforce query directive locations (issue #680)') */
@@ -1562,10 +1604,12 @@ class DirectivesTest extends TestCase
                         $this->visited = &$visited;
                     }
 
-                    public function visitObject(ObjectType $object): void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         TestCase::assertEquals('Query', $object->name);
                         $this->visited[] = $object;
+
+                        return null;
                     }
                 },
             ],
@@ -1612,7 +1656,7 @@ class DirectivesTest extends TestCase
                 'reverse' => new class extends SchemaDirectiveVisitor
                 {
                     /** @param mixed[] $details */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details): void
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         $resolve          = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $field->resolveFn = static function (...$args) use ($resolve) {
@@ -1623,6 +1667,8 @@ class DirectivesTest extends TestCase
 
                             return $result;
                         };
+
+                        return null;
                     }
                 },
             ],

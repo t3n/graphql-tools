@@ -121,7 +121,7 @@ class DelegateToSchema
     private static function createDocument(
         string $targetField,
         string $targetOperation,
-        array|NodeList $originalSelections,
+        iterable|NodeList $originalSelections,
         array $fragments,
         array|NodeList $variables,
         NameNode|null $operationName,
@@ -131,14 +131,14 @@ class DelegateToSchema
 
         foreach ($originalSelections as $field) {
             assert($field instanceof FieldNode);
-            $fieldSelection = $field->selectionSet ? $field->selectionSet->selections : [];
+            $fieldSelection = $field->selectionSet ? $field->selectionSet->selections : NodeList::create([]);
             $selections     = array_merge($selections, Utils::toArray($fieldSelection));
             $args           = array_merge($args, $field->arguments ? Utils::toArray($field->arguments) : []);
         }
 
         $selectionSet = null;
         if (count($selections) > 0) {
-            $selectionSet = new SelectionSetNode(['selections' => $selections]);
+            $selectionSet = new SelectionSetNode(['selections' => NodeList::create($selections)]);
         }
 
         $rootField = new FieldNode([
@@ -149,7 +149,7 @@ class DelegateToSchema
         ]);
 
         $rootSelectionSet = new SelectionSetNode([
-            'selections' => [$rootField],
+            'selections' => NodeList::create([$rootField]),
         ]);
 
         $operationDefinition = new OperationDefinitionNode([

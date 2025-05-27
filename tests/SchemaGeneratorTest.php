@@ -394,10 +394,10 @@ class SchemaGeneratorTest extends TestCase
             $combinedCandD['typeDefs'],
         ]);
 
-        static::assertContains('type TypeA', $result);
-        static::assertContains('type TypeB', $result);
-        static::assertContains('type TypeC', $result);
-        static::assertContains('type TypeD', $result);
+        static::assertStringContainsString('type TypeA', $result);
+        static::assertStringContainsString('type TypeB', $result);
+        static::assertStringContainsString('type TypeC', $result);
+        static::assertStringContainsString('type TypeD', $result);
     }
 
     /** @see it('properly deduplicates the array of type DefinitionNodes') */

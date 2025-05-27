@@ -9,10 +9,12 @@ use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\FragmentSpreadNode;
 use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\NameNode;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Type\Schema;
 use GraphQLTools\GraphQLTools;
 use GraphQLTools\Transforms\WrapQuery;
+use GraphQLTools\Utils;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
@@ -92,7 +94,7 @@ class WrapQueryTest extends TestCase
                                     ['userById'],
                                     static function ($subtree) {
                                         return new SelectionSetNode([
-                                            'selections' => array_map(
+                                            'selections' => NodeList::create(array_map(
                                                 static function ($selection) {
                                                     // just append fragments, not interesting for this
                                                     // test
@@ -115,8 +117,8 @@ class WrapQueryTest extends TestCase
                                                         ]),
                                                     ]);
                                                 },
-                                                $subtree->selections,
-                                            ),
+                                                Utils::toArray($subtree->selections),
+                                            )),
                                         ]);
                                     },
                                     static function ($result) {

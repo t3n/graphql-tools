@@ -71,8 +71,7 @@ class Mock
         };
     }
 
-    /** @var null object */
-    protected static null $defaultMocks = null;
+    protected static object|null $defaultMocks = null;
 
     protected static function getDefaultMockMap(): object
     {
@@ -239,8 +238,6 @@ class Mock
                 }
 
                 if ($fieldType instanceof UnionType || $fieldType instanceof InterfaceType) {
-                    $implementationType = null;
-                    assert($implementationType instanceof ObjectType);
                     if (isset($mocks[$fieldType->name])) {
                         $interfaceMockObj = $mocks[$fieldType->name]($root, $args, $context, $info);
                         if (! $interfaceMockObj || ! isset($interfaceMockObj['__typename'])) {
@@ -252,6 +249,8 @@ class Mock
                         $possibleTypes      = $schema->getPossibleTypes($fieldType);
                         $implementationType = static::getRandomElement($possibleTypes);
                     }
+
+                    assert($implementationType instanceof ObjectType);
 
                     return array_merge(
                         ['__typename' => $implementationType->name],
