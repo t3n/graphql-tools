@@ -1724,8 +1724,7 @@ class SchemaGeneratorTest extends TestCase
             }
         };
 
-        // different form original test. webonyx/graphql-php does not respect order in typeDefs
-        $assertFieldError('Query.bird', []);
+        $assertFieldError('Bird.id', []);
         $assertFieldError('Query.bird', [
             'Bird' => [
                 'id' => static function ($bird) {

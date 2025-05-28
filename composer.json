@@ -10,7 +10,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "webonyx/graphql-php": "^14.0",
+        "webonyx/graphql-php": "^15.0",
         "ext-json": "*"
     },
     "require-dev": {
@@ -40,5 +40,10 @@
         "test": "phpunit",
         "lint": "phpcs",
         "static-analysis": "phpstan analyse --ansi"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
 }

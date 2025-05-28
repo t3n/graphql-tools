@@ -11,11 +11,11 @@ use GraphQL\Executor\Executor;
 use GraphQL\Executor\Promise\Adapter\ReactPromiseAdapter;
 use GraphQL\GraphQL;
 use GraphQL\Language\VisitorOperation;
+use GraphQL\Type\Definition\Argument;
 use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Definition\Directive;
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\EnumValueDefinition;
-use GraphQL\Type\Definition\FieldArgument;
 use GraphQL\Type\Definition\FieldDefinition;
 use GraphQL\Type\Definition\InputObjectField;
 use GraphQL\Type\Definition\InputObjectType;
@@ -126,7 +126,7 @@ class DirectivesTest extends TestCase
         $getDirectiveNames = static function ($type) {
             return array_map(static function ($d) {
                 return $d->name->value;
-            }, Utils::toArray($type instanceof Schema ? $type->getAstNode()->directives : $type->astNode->directives));
+            }, Utils::toArray($type instanceof Schema ? $type->astNode->directives : $type->astNode->directives));
         };
 
         $checkDirectives = static function (
@@ -379,7 +379,7 @@ class DirectivesTest extends TestCase
                     }
 
                     /** @param mixed[] $details */
-                    public function visitArgumentDefinition(FieldArgument $arg, array $details): mixed
+                    public function visitArgumentDefinition(Argument $arg, array $details): mixed
                     {
                         TestCase::assertEquals($arg, $this->visitedType);
                         TestCase::assertEquals('input', $arg->name);
@@ -831,7 +831,7 @@ class DirectivesTest extends TestCase
                 $resolve       = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                 $defaultFormat = $this->args['defaultFormat'];
 
-                $field->args[] = new FieldArgument([
+                $field->args[] = new Argument([
                     'name' => 'format',
                     'type' => Type::string(),
                 ]);
@@ -1344,7 +1344,7 @@ class DirectivesTest extends TestCase
                     {
                         ['name' => $name, 'from' => $from] = $this->args;
                         $fields                            = $type->getFields();
-                        $fields[$name]                     = FieldDefinition::create([
+                        $fields[$name]                     = new FieldDefinition([
                             'name' => $name,
                             'type' => Type::id(),
                             'description' => 'Unique ID',
@@ -1457,22 +1457,22 @@ class DirectivesTest extends TestCase
             'resolverValidationOptions' => ['requireResolversForResolveType' => false],
         ]);
 
-        $Query      = $schema->getQueryType();
-        $peopleType = $Query->getField('people')->getType();
+        $query      = $schema->getQueryType();
+        $peopleType = $query->getField('people')->getType();
         if (! ($peopleType instanceof ListOfType)) {
             throw new Exception('Query.people not a GraphQLList type');
         }
 
-        static::assertEquals($humanType, $peopleType->ofType);
+        static::assertEquals($humanType, $peopleType->getWrappedType());
 
-        $Mutation            = $schema->getMutationType();
-        $addPersonResultType = $Mutation->getField('addPerson')->getType();
+        $mutation            = $schema->getMutationType();
+        $addPersonResultType = $mutation->getField('addPerson')->getType();
         static::assertEquals($humanType, $addPersonResultType);
 
-        $WhateverUnion = $schema->getType('WhateverUnion');
+        $whateverUnion = $schema->getType('WhateverUnion');
 
         $found = false;
-        foreach ($WhateverUnion->getTypes() as $type) {
+        foreach ($whateverUnion->getTypes() as $type) {
             if ($type->name !== 'Human') {
                 continue;
             }
@@ -1578,7 +1578,7 @@ class DirectivesTest extends TestCase
         $query      = $schema->getQueryType();
         $peopleType = $query->getField('people')->getType();
         assert($peopleType instanceof ListOfType);
-        static::assertEquals($human, $peopleType->ofType);
+        static::assertEquals($human, $peopleType->getWrappedType());
     }
 
     /** @see it('does not enforce query directive locations (issue #680)') */

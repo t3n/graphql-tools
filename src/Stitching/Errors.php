@@ -147,7 +147,7 @@ class Errors
     protected static function hasResult(Error $error): bool
     {
         return isset($error->result)
-            || count($error->getExtensions()) > 0
+            || count((array) $error->getExtensions()) > 0
             || ($error->getPrevious() && isset($error->getPrevious()->result));
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GraphQLTools\Stitching;
 
+use ArrayObject;
 use Exception;
 use GraphQL\GraphQL;
 use GraphQL\Language\AST\DocumentNode;
@@ -12,9 +13,7 @@ use GraphQL\Language\AST\FragmentDefinitionNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\OperationDefinitionNode;
-use GraphQL\Language\AST\SelectionNode;
 use GraphQL\Language\AST\SelectionSetNode;
-use GraphQL\Language\AST\VariableDefinitionNode;
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Validator\DocumentValidator;
@@ -113,17 +112,13 @@ class DelegateToSchema
         */
     }
 
-    /**
-     * @param SelectionNode[]|NodeList          $originalSelections
-     * @param FragmentDefinitionNode[]          $fragments
-     * @param VariableDefinitionNode[]|NodeList $variables
-     */
+    /** @param FragmentDefinitionNode[] $fragments */
     private static function createDocument(
         string $targetField,
         string $targetOperation,
-        iterable|NodeList $originalSelections,
+        ArrayObject $originalSelections,
         array $fragments,
-        array|NodeList $variables,
+        NodeList $variables,
         NameNode|null $operationName,
     ): DocumentNode {
         $selections = [];
@@ -131,25 +126,25 @@ class DelegateToSchema
 
         foreach ($originalSelections as $field) {
             assert($field instanceof FieldNode);
-            $fieldSelection = $field->selectionSet ? $field->selectionSet->selections : NodeList::create([]);
+            $fieldSelection = $field->selectionSet ? $field->selectionSet->selections : new NodeList([]);
             $selections     = array_merge($selections, Utils::toArray($fieldSelection));
-            $args           = array_merge($args, $field->arguments ? Utils::toArray($field->arguments) : []);
+            $args           = array_merge($args, Utils::toArray($field->arguments));
         }
 
         $selectionSet = null;
         if (count($selections) > 0) {
-            $selectionSet = new SelectionSetNode(['selections' => NodeList::create($selections)]);
+            $selectionSet = new SelectionSetNode(['selections' => new NodeList($selections)]);
         }
 
         $rootField = new FieldNode([
             'alias' => null,
-            'arguments' => $args,
+            'arguments' => new NodeList($args),
             'selectionSet' => $selectionSet,
             'name' => new NameNode(['value' => $targetField]),
         ]);
 
         $rootSelectionSet = new SelectionSetNode([
-            'selections' => NodeList::create([$rootField]),
+            'selections' => new NodeList([$rootField]),
         ]);
 
         $operationDefinition = new OperationDefinitionNode([
@@ -160,7 +155,7 @@ class DelegateToSchema
         ]);
 
         return new DocumentNode([
-            'definitions' => array_merge([$operationDefinition], $fragments),
+            'definitions' => new NodeList(array_merge([$operationDefinition], $fragments)),
         ]);
     }
 }

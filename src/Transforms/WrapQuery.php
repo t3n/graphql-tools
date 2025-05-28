@@ -58,7 +58,7 @@ class WrapQuery implements Transform
                                 || (is_array($wrapResult) && $wrapResult['kind'] === NodeKind::SELECTION_SET)
                                 ? $wrapResult
                                 : new SelectionSetNode([
-                                    'selections' => NodeList::create([$wrapResult]),
+                                    'selections' => new NodeList([$wrapResult]),
                                 ]);
 
                             $node               = clone$node;

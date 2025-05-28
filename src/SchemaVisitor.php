@@ -6,9 +6,10 @@ namespace GraphQLTools;
 
 use Exception;
 use GraphQL\Language\VisitorOperation;
+use GraphQL\Language\VisitorRemoveNode;
+use GraphQL\Type\Definition\Argument;
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\EnumValueDefinition;
-use GraphQL\Type\Definition\FieldArgument;
 use GraphQL\Type\Definition\FieldDefinition;
 use GraphQL\Type\Definition\InputObjectField;
 use GraphQL\Type\Definition\InputObjectType;
@@ -61,10 +62,7 @@ class SchemaVisitor
 
     public static function removeNode(): VisitorOperation
     {
-        $operation             = new VisitorOperation();
-        $operation->removeNode = true;
-
-        return $operation;
+        return new VisitorRemoveNode();
     }
 
     public function visitSchema(Schema $schema): void
@@ -88,7 +86,7 @@ class SchemaVisitor
     }
 
     /** @param mixed[] $details */
-    public function visitArgumentDefinition(FieldArgument $argument, array $details): mixed
+    public function visitArgumentDefinition(Argument $argument, array $details): mixed
     {
         return $argument;
     }
@@ -239,7 +237,7 @@ class SchemaVisitor
                 if ($newField instanceof FieldDefinition) {
                     static::updateEachKey(
                         $newField->args,
-                        static function (FieldArgument $arg) use ($callMethod, $newField, $type) {
+                        static function (Argument $arg) use ($callMethod, $newField, $type) {
                             return $callMethod('visitArgumentDefinition', $arg, [
                                 'field' => $newField,
                                 'objectType' => $type,
@@ -395,7 +393,7 @@ class SchemaVisitor
                 continue;
             }
 
-            if ($result instanceof VisitorOperation && $result->removeNode) {
+            if ($result instanceof VisitorRemoveNode) {
                 unset($arr[$key]);
                 continue;
             }

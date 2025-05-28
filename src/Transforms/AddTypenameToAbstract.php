@@ -78,7 +78,7 @@ class AddTypenameToAbstract implements Transform
 
                         if ($newSelections !== $selections) {
                             $transformedNode             = clone$node;
-                            $transformedNode->selections = NodeList::create($newSelections);
+                            $transformedNode->selections = new NodeList($newSelections);
 
                             return $transformedNode;
                         }

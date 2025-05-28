@@ -94,7 +94,7 @@ class WrapQueryTest extends TestCase
                                     ['userById'],
                                     static function ($subtree) {
                                         return new SelectionSetNode([
-                                            'selections' => NodeList::create(array_map(
+                                            'selections' => new NodeList(array_map(
                                                 static function ($selection) {
                                                     // just append fragments, not interesting for this
                                                     // test

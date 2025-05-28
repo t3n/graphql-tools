@@ -6,6 +6,8 @@ namespace GraphQLTools\Transforms;
 
 use GraphQL\Error\Error;
 use GraphQL\Language\VisitorOperation;
+use GraphQL\Language\VisitorRemoveNode;
+use GraphQL\Language\VisitorSkipNode;
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\InputObjectType;
 use GraphQL\Type\Definition\InterfaceType;
@@ -59,9 +61,9 @@ class VisitSchema
                 if ($result === null) {
                     $types[$typeName] = SchemaRecreation::recreateType($type, $resolveType, ! $stripResolvers);
                 } elseif ($result instanceof VisitorOperation) {
-                    if ($result->doContinue) {
+                    if ($result instanceof VisitorSkipNode) {
                         $types[$typeName] = SchemaRecreation::recreateType($type, $resolveType, ! $stripResolvers);
-                    } elseif ($result->removeNode) {
+                    } elseif ($result instanceof VisitorRemoveNode) {
                         $types[$typeName] = null;
                     }
                 } else {
@@ -145,17 +147,11 @@ class VisitSchema
 
     public static function skipNode(): VisitorOperation
     {
-        $r             = new VisitorOperation();
-        $r->doContinue = true;
-
-        return $r;
+        return new VisitorSkipNode();
     }
 
     public static function removeNode(): VisitorOperation
     {
-        $r             = new VisitorOperation();
-        $r->removeNode = true;
-
-        return $r;
+        return new VisitorRemoveNode();
     }
 }

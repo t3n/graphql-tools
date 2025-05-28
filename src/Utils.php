@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace GraphQLTools;
 
 use GraphQL\Language\AST\Node;
+use GraphQL\Language\BlockString;
 use GraphQL\Language\Token;
+use GraphQL\Type\Definition\AbstractType;
 use GraphQL\Type\Definition\BooleanType;
 use GraphQL\Type\Definition\CompositeType;
 use GraphQL\Type\Definition\FloatType;
 use GraphQL\Type\Definition\IDType;
 use GraphQL\Type\Definition\IntType;
 use GraphQL\Type\Definition\NamedType;
+use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\StringType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
-use GraphQL\Utils\BlockString;
-use GraphQL\Utils\TypeComparators;
 use IteratorAggregate;
 use ReflectionClass;
 use ReflectionProperty;
@@ -60,9 +61,57 @@ class Utils
         }
 
         if ($typeA instanceof CompositeType && $typeB instanceof CompositeType) {
-            return TypeComparators::doTypesOverlap($schema, $typeA, $typeB);
+            return self::doTypesOverlap($schema, $typeA, $typeB);
         }
 
+        return false;
+    }
+
+    /**
+     * Provided two composite types, determine if they "overlap". Two composite
+     * types overlap when the Sets of possible concrete types for each intersect.
+     *
+     * This is often used to determine if a fragment of a given type could possibly
+     * be visited in a context of another type.
+     *
+     * This function is commutative.
+     *
+     * This function was part of @see TypeComparators in webonyx/graphql-php v14
+     *
+     * @see PossibleFragmentSpreads::doTypesOverlap()
+     */
+    private static function doTypesOverlap(Schema $schema, CompositeType $typeA, CompositeType $typeB): bool
+    {
+        // Equivalent types overlap
+        if ($typeA === $typeB) {
+            return true;
+        }
+
+        if ($typeA instanceof AbstractType) {
+            if ($typeB instanceof AbstractType) {
+                // If both types are abstract, then determine if there is any intersection
+                // between possible concrete types of each.
+                foreach ($schema->getPossibleTypes($typeA) as $type) {
+                    if ($schema->isSubType($typeB, $type)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            // Determine if the latter type is a possible concrete type of the former.
+            if ($typeB instanceof ObjectType) {
+                return $schema->isSubType($typeA, $typeB);
+            }
+        }
+
+        if ($typeB instanceof AbstractType && $typeA instanceof ObjectType) {
+            // Determine if the former type is a possible concrete type of the latter.
+            return $schema->isSubType($typeB, $typeA);
+        }
+
+        // Otherwise the types do not overlap.
         return false;
     }
 
@@ -100,7 +149,7 @@ class Utils
         if (isset($options['commentDescriptions']) && $options['commentDescriptions']) {
             $rawValue = static::getLeadingCommentBlock($node);
             if ($rawValue !== null) {
-                return BlockString::value("\n" . $rawValue);
+                return BlockString::dedentBlockStringLines("\n" . $rawValue);
             }
         }
 
@@ -117,7 +166,7 @@ class Utils
         $reflection = self::getReflectionProperty($subject, $propertyName);
 
         if ($reflection === null) {
-            throw new RuntimeException("Property '{$propertyName}' does not exist.");
+            throw new RuntimeException('Property \'' . $propertyName . '\' does not exist.');
         }
 
         $reflection->setAccessible(true);
@@ -129,7 +178,7 @@ class Utils
         $reflection = self::getReflectionProperty($subject, $propertyName);
 
         if ($reflection === null) {
-            throw new RuntimeException("Property '{$propertyName}' does not exist.");
+            throw new RuntimeException('Property \'' . $propertyName . '\' does not exist.');
         }
 
         $reflection->setAccessible(true);

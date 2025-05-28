@@ -9,9 +9,7 @@ use GraphQL\Language\AST\Node;
 use GraphQL\Language\Parser;
 use GraphQL\Type\Schema;
 use GraphQL\Utils\BuildSchema;
-use GraphQL\Utils\SchemaExtender;
 
-use function count;
 use function gettype;
 use function is_array;
 use function is_string;
@@ -50,13 +48,7 @@ class BuildSchemaFromTypeDefinitions
         }
 
         $backcompatOptions = ['commentDescriptions' => true];
-        $schema            = BuildSchema::buildAST($astDocument, null, $backcompatOptions);
 
-        $extensionsAst = ExtractExtensionDefinitions::invoke($astDocument);
-        if (count($extensionsAst->definitions) > 0) {
-            $schema = SchemaExtender::extend($schema, $extensionsAst, $backcompatOptions);
-        }
-
-        return $schema;
+        return BuildSchema::buildAST($astDocument, null, $backcompatOptions);
     }
 }

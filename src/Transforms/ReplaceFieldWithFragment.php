@@ -114,7 +114,7 @@ class ReplaceFieldWithFragment implements Transform
 
                             if (count($selections) !== count($node->selections)) {
                                 $node             = clone $node;
-                                $node->selections = NodeList::create(array_values($selections));
+                                $node->selections = new NodeList(array_values($selections));
 
                                 return $node;
                             }
@@ -170,7 +170,7 @@ class ReplaceFieldWithFragment implements Transform
             'typeCondition' => new NamedTypeNode([
                 'name' => new NameNode(['value' => $type]),
             ]),
-            'selectionSet' => new SelectionSetNode(['selections' => NodeList::create($deduplicatedFragmentSelection)]),
+            'selectionSet' => new SelectionSetNode(['selections' => new NodeList($deduplicatedFragmentSelection)]),
         ]);
     }
 

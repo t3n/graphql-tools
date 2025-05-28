@@ -7,7 +7,7 @@ namespace GraphQLTools\Transforms;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\Visitor;
-use GraphQL\Language\VisitorOperation;
+use GraphQL\Language\VisitorStop;
 
 use function array_pop;
 use function json_encode;
@@ -47,10 +47,7 @@ class ExtractField implements Transform
                         if ($ourPathFrom === json_encode($fieldPath)) {
                             $fromSelection = $node->selectionSet;
 
-                            $o          = new VisitorOperation();
-                            $o->doBreak = true;
-
-                            return $o;
+                            return new VisitorStop();
                         }
 
                         return null;

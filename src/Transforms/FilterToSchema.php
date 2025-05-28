@@ -13,6 +13,7 @@ use GraphQL\Language\AST\FragmentSpreadNode;
 use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeKind;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\AST\VariableDefinitionNode;
@@ -143,13 +144,13 @@ class FilterToSchema implements Transform
                 'operation' => $operation->operation,
                 'name' => $operation->name,
                 'directives' => $operation->directives,
-                'variableDefinitions' => array_values($variableDefinitions),
+                'variableDefinitions' => new NodeList(array_values($variableDefinitions)),
                 'selectionSet' => $selectionSet,
             ]);
         }
 
         return new DocumentNode([
-            'definitions' => array_merge($newOperations, $newFragments),
+            'definitions' => new NodeList(array_merge($newOperations, $newFragments)),
         ]);
     }
 
@@ -262,20 +263,18 @@ class FilterToSchema implements Transform
                                 return $arg->name;
                             }, $field->args ? Utils::toArray($field->args) : []);
 
-                            if ($node->arguments) {
-                                $args = array_filter(
-                                    Utils::toArray($node->arguments),
-                                    static function (ArgumentNode $arg) use ($argNames) {
-                                        return in_array($arg->name->value, $argNames);
-                                    },
-                                );
+                            $args = array_filter(
+                                Utils::toArray($node->arguments),
+                                static function (ArgumentNode $arg) use ($argNames) {
+                                    return in_array($arg->name->value, $argNames);
+                                },
+                            );
 
-                                if (count($args) !== count($node->arguments)) {
-                                    $node            = clone$node;
-                                    $node->arguments = $args;
+                            if (count($args) !== count($node->arguments)) {
+                                $node            = clone$node;
+                                $node->arguments = new NodeList($args);
 
-                                    return $node;
-                                }
+                                return $node;
                             }
                         } elseif ($parentType instanceof UnionType && $node->name->value === '__typename') {
                             $typeStack[] = Introspection::typeNameMetaFieldDef()->getType();
@@ -375,14 +374,13 @@ class FilterToSchema implements Transform
     private static function resolveType(Type $type): NamedType
     {
         if ($type instanceof NonNull) {
-            return $type->getWrappedType(true);
+            return $type->getInnermostType();
         }
 
         if ($type instanceof ListOfType) {
-            return $type->getWrappedType(true);
+            $type = $type->getInnermostType();
         }
 
-        /** @var NamedType $type */
         return $type;
     }
 

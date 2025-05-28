@@ -69,10 +69,10 @@ class AddArgumentsAsVariables implements Transform
      */
     private static function addVariablesToRootField(Schema $targetSchema, DocumentNode $document, array $args): array
     {
-        $operations = array_filter($document->definitions, static function (DefinitionNode $def) {
+        $operations = array_filter(Utils::toArray($document->definitions), static function (DefinitionNode $def) {
             return $def instanceof OperationDefinitionNode;
         });
-        $fragments  = array_filter($document->definitions, static function (DefinitionNode $def) {
+        $fragments  = array_filter(Utils::toArray($document->definitions), static function (DefinitionNode $def) {
             return $def instanceof FragmentDefinitionNode;
         });
 
@@ -144,7 +144,7 @@ class AddArgumentsAsVariables implements Transform
                         }
 
                         $selection            = clone$selection;
-                        $selection->arguments = array_values($newArgs);
+                        $selection->arguments = new NodeList(array_values($newArgs));
                         $newSelectionSet[]    = $selection;
                     } else {
                         $newSelectionSet[] = $selection;
@@ -152,11 +152,11 @@ class AddArgumentsAsVariables implements Transform
                 }
 
                 $operation                      = clone$operation;
-                $operation->variableDefinitions = array_merge(
+                $operation->variableDefinitions = new NodeList(array_merge(
                     Utils::toArray($operation->variableDefinitions),
                     array_values($variables),
-                );
-                $operation->selectionSet        = new SelectionSetNode(['selections' => NodeList::create($newSelectionSet)]);
+                ));
+                $operation->selectionSet        = new SelectionSetNode(['selections' => new NodeList($newSelectionSet)]);
 
                 return $operation;
             },
@@ -169,7 +169,7 @@ class AddArgumentsAsVariables implements Transform
         }
 
         $document              = clone$document;
-        $document->definitions = array_merge($newOperations, $fragments);
+        $document->definitions = new NodeList(array_merge($newOperations, $fragments));
 
         return [
             'document' => $document,
@@ -190,7 +190,7 @@ class AddArgumentsAsVariables implements Transform
 
         if ($type instanceof ListTypeNode) {
             return new ListTypeNode([
-                'type' => static::typeToAst($type->ofType),
+                'type' => static::typeToAst($type->type),
             ]);
         }
 

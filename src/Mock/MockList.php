@@ -45,7 +45,7 @@ class MockList
             if ($wrappedFunction) {
                 $res = $wrappedFunction($root, $args, $context, $info);
                 if ($res instanceof MockList) {
-                    $nullableType = Type::getNullableType($fieldType->ofType);
+                    $nullableType = Type::getNullableType($fieldType->getWrappedType());
                     $arr[$i]      = $res->mock(
                         $root,
                         $args,
@@ -58,7 +58,7 @@ class MockList
                     $arr[$i] = $res;
                 }
             } else {
-                $arr[$i] = $mockTypeFunc($fieldType->ofType)($root, $args, $context, $info);
+                $arr[$i] = $mockTypeFunc($fieldType->getWrappedType())($root, $args, $context, $info);
             }
         }
 

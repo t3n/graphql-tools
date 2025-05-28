@@ -132,11 +132,11 @@ class ExpandAbstractTypes implements Transform
         array $reverseMapping,
         DocumentNode $document,
     ): DocumentNode {
-        $operations = array_filter($document->definitions, static function (DefinitionNode $def) {
+        $operations = array_filter(Utils::toArray($document->definitions), static function (DefinitionNode $def) {
             return $def instanceof OperationDefinitionNode;
         });
         /** @var FragmentDefinitionNode[] $fragments */
-        $fragments = array_filter($document->definitions, static function (DefinitionNode $def) {
+        $fragments = array_filter(Utils::toArray($document->definitions), static function (DefinitionNode $def) {
             return $def instanceof FragmentDefinitionNode;
         });
 
@@ -185,7 +185,7 @@ class ExpandAbstractTypes implements Transform
         }
 
         $newDocument              = clone$document;
-        $newDocument->definitions = array_merge($operations, $newFragments);
+        $newDocument->definitions = new NodeList(array_merge($operations, $newFragments));
 
         $typeInfo = new TypeInfo($targetSchema);
 
@@ -261,7 +261,7 @@ class ExpandAbstractTypes implements Transform
 
                         if (count($newSelections) !== count($node->selections)) {
                             $node             = clone$node;
-                            $node->selections = NodeList::create($newSelections);
+                            $node->selections = new NodeList($newSelections);
 
                             return $node;
                         }

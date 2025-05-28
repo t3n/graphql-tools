@@ -66,7 +66,7 @@ class SchemaDirectiveVisitor extends SchemaVisitor
             &$createdVisitors,
         ): array {
             $visitors       = [];
-            $astNode        = $type instanceof Schema ? $type->getAstNode() : ($type->astNode ?? null);
+            $astNode        = $type instanceof Schema ? $type->astNode : ($type->astNode ?? null);
             $directiveNodes = $astNode ? $astNode->directives : null;
 
             if (! $directiveNodes) {

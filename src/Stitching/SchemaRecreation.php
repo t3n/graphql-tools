@@ -12,9 +12,9 @@ use GraphQL\Language\AST\ListValueNode;
 use GraphQL\Language\AST\ObjectValueNode;
 use GraphQL\Language\AST\StringValueNode;
 use GraphQL\Language\AST\ValueNode;
+use GraphQL\Type\Definition\Argument;
 use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Definition\EnumType;
-use GraphQL\Type\Definition\FieldArgument;
 use GraphQL\Type\Definition\FieldDefinition;
 use GraphQL\Type\Definition\InputObjectField;
 use GraphQL\Type\Definition\InputObjectType;
@@ -205,7 +205,7 @@ class SchemaRecreation
     {
         $resolveType = static function (Type $type) use ($getType, &$resolveType) {
             if ($type instanceof ListOfType) {
-                $innerType = $resolveType($type->ofType);
+                $innerType = $resolveType($type->getWrappedType());
                 if ($innerType === null) {
                     return null;
                 }
@@ -246,12 +246,12 @@ class SchemaRecreation
             'description' => $field->description,
             'deprecationReason' => $field->deprecationReason,
             'astNode' => $field->astNode,
-            'complexity' => $field->getComplexityFn(),
+            'complexity' => $field->complexityFn,
         ];
     }
 
     /**
-     * @param FieldArgument[] $args
+     * @param Argument[] $args
      *
      * @return mixed[]
      */
@@ -271,7 +271,7 @@ class SchemaRecreation
     }
 
     /** @return mixed[]|null */
-    public static function argumentToArgumentConfig(FieldArgument $argument, callable $resolveType): array|null
+    public static function argumentToArgumentConfig(Argument $argument, callable $resolveType): array|null
     {
         $type = $resolveType($argument->getType());
         if ($type === null) {
