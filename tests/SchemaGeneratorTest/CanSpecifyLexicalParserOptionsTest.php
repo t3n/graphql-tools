@@ -31,7 +31,10 @@ class CanSpecifyLexicalParserOptionsTest extends TestCase
     /** @see it("can specify 'experimentalFragmentVariables' option") */
     public function testCanSpecifyExperimentalFragmentVariablesOption(): void
     {
-        $this->markTestSkipped('Currently broken in webonyx/graphql-php');
+        $this->markTestSkipped('Currently not fully supported.');
+
+        // Typedef does not make sense. Cf. https://github.com/webonyx/graphql-php/issues/1707
+        // Even with a proper query, the experimental fragment variables parsing fail.
 
         $typeDefs = '
             type Hello {
