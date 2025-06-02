@@ -9,15 +9,14 @@ use GraphQL\Type\Definition\EnumType;
 
 class ConvertEnumResponse implements Transform
 {
-    /** @var EnumType */
-    private $enumNode;
+    private EnumType $enumNode;
 
     public function __construct(EnumType $enumType)
     {
         $this->enumNode = $enumType;
     }
 
-    public function transformResult(ExecutionResult $result) : ExecutionResult
+    public function transformResult(ExecutionResult $result): ExecutionResult
     {
         $value = $this->enumNode->getValue($result);
         if ($value) {

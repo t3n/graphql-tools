@@ -13,6 +13,7 @@ use GraphQL\Language\AST\FragmentSpreadNode;
 use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeKind;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\AST\VariableDefinitionNode;
@@ -28,23 +29,21 @@ use GraphQL\Type\Definition\UnionType;
 use GraphQL\Type\Introspection;
 use GraphQL\Type\Schema;
 use GraphQLTools\Utils;
+
 use function array_filter;
 use function array_map;
 use function array_merge;
 use function array_pop;
 use function array_search;
 use function array_values;
+use function assert;
 use function count;
 use function in_array;
 
 class FilterToSchema implements Transform
 {
-    /** @var Schema */
-    private $targetSchema;
-
-    public function __construct(Schema $targetSchema)
+    public function __construct(private Schema $targetSchema)
     {
-        $this->targetSchema = $targetSchema;
     }
 
     /**
@@ -52,17 +51,18 @@ class FilterToSchema implements Transform
      *
      * @return mixed[]
      */
-    public function transformRequest(array $originalRequest) : array
+    public function transformRequest(array $originalRequest): array
     {
         $document                    = static::filterDocumentToSchema(
             $this->targetSchema,
-            $originalRequest['document']
+            $originalRequest['document'],
         );
         $originalRequest['document'] = $document;
+
         return $originalRequest;
     }
 
-    private static function filterDocumentToSchema(Schema $targetSchema, DocumentNode $document) : DocumentNode
+    private static function filterDocumentToSchema(Schema $targetSchema, DocumentNode $document): DocumentNode
     {
         /** @var OperationDefinitionNode[] $operations */
         $operations = array_filter(Utils::toArray($document->definitions), static function (DefinitionNode $def) {
@@ -81,8 +81,9 @@ class FilterToSchema implements Transform
             $fragments,
             static function (FragmentDefinitionNode $fragment) use ($targetSchema) {
                 $typeName = $fragment->typeCondition->name->value;
+
                 return $targetSchema->getType($typeName) !== null;
-            }
+            },
         );
 
         $validFragmentsWithType = [];
@@ -111,10 +112,10 @@ class FilterToSchema implements Transform
                 $targetSchema,
                 $type,
                 $validFragmentsWithType,
-                $operation->selectionSet
+                $operation->selectionSet,
             );
 
-            $usedFragments = static::union([ $usedFragments, $operationUsedFragments ]);
+            $usedFragments = static::union([$usedFragments, $operationUsedFragments]);
 
             [
                 'usedVariables' => $collectedUsedVariables,
@@ -125,7 +126,7 @@ class FilterToSchema implements Transform
                 $fragmentSet,
                 $validFragments,
                 $validFragmentsWithType,
-                $usedFragments
+                $usedFragments,
             );
 
             $fullUsedVariables = static::union([$operationUsedVariables, $collectedUsedVariables]);
@@ -134,22 +135,22 @@ class FilterToSchema implements Transform
 
             $variableDefinitions = array_filter(
                 Utils::toArray($operation->variableDefinitions),
-                static function (VariableDefinitionNode $variable) use ($fullUsedVariables) : bool {
+                static function (VariableDefinitionNode $variable) use ($fullUsedVariables): bool {
                     return in_array($variable->variable->name->value, $fullUsedVariables);
-                }
+                },
             );
 
             $newOperations[] = new OperationDefinitionNode([
                 'operation' => $operation->operation,
                 'name' => $operation->name,
                 'directives' => $operation->directives,
-                'variableDefinitions' => array_values($variableDefinitions),
+                'variableDefinitions' => new NodeList(array_values($variableDefinitions)),
                 'selectionSet' => $selectionSet,
             ]);
         }
 
         return new DocumentNode([
-            'definitions' => array_merge($newOperations, $newFragments),
+            'definitions' => new NodeList(array_merge($newOperations, $newFragments)),
         ]);
     }
 
@@ -166,8 +167,8 @@ class FilterToSchema implements Transform
         array $fragmentSet,
         array $validFragments,
         array $validFragmentsWithType,
-        array $usedFragments
-    ) : array {
+        array $usedFragments,
+    ): array {
         $usedVariables = [];
         $newFragments  = [];
 
@@ -177,11 +178,11 @@ class FilterToSchema implements Transform
                 $validFragments,
                 static function (FragmentDefinitionNode $fr) use ($nextFragmentName) {
                     return $fr->name->value === $nextFragmentName;
-                }
+                },
             );
 
-            /** @var FragmentDefinitionNode $fragment */
             $fragment = array_values($fragments)[0] ?? null;
+            assert($fragment instanceof FragmentDefinitionNode || $fragment === null);
 
             if (! $fragment) {
                 continue;
@@ -194,12 +195,12 @@ class FilterToSchema implements Transform
             [
                 'selectionSet' => $selectionSet,
                 'usedFragments' => $fragmentUsedFragments,
-                'usedVariables'=> $fragmentUsedVariables,
+                'usedVariables' => $fragmentUsedVariables,
             ] = static::filterSelectionSet(
                 $targetSchema,
                 $type,
                 $validFragmentsWithType,
-                $fragment->selectionSet
+                $fragment->selectionSet,
             );
 
             $usedFragments = static::union([$usedFragments, $fragmentUsedFragments]);
@@ -233,8 +234,8 @@ class FilterToSchema implements Transform
         Schema $schema,
         Type $type,
         array $validFragments,
-        SelectionSetNode $selectionSet
-    ) : array {
+        SelectionSetNode $selectionSet,
+    ): array {
         $usedFragments = [];
         $usedVariables = [];
         $typeStack     = [$type];
@@ -254,27 +255,26 @@ class FilterToSchema implements Transform
 
                             if (! $field) {
                                 return Visitor::removeNode();
-                            } else {
-                                $typeStack[] = $field->getType();
                             }
+
+                            $typeStack[] = $field->getType();
 
                             $argNames = array_map(static function ($arg) {
                                 return $arg->name;
                             }, $field->args ? Utils::toArray($field->args) : []);
 
-                            if ($node->arguments) {
-                                $args = array_filter(
-                                    Utils::toArray($node->arguments),
-                                    static function (ArgumentNode $arg) use ($argNames) {
-                                        return in_array($arg->name->value, $argNames);
-                                    }
-                                );
+                            $args = array_filter(
+                                Utils::toArray($node->arguments),
+                                static function (ArgumentNode $arg) use ($argNames) {
+                                    return in_array($arg->name->value, $argNames);
+                                },
+                            );
 
-                                if (count($args) !== count($node->arguments)) {
-                                    $node            = clone$node;
-                                    $node->arguments = $args;
-                                    return $node;
-                                }
+                            if (count($args) !== count($node->arguments)) {
+                                $node            = clone$node;
+                                $node->arguments = new NodeList($args);
+
+                                return $node;
                             }
                         } elseif ($parentType instanceof UnionType && $node->name->value === '__typename') {
                             $typeStack[] = Introspection::typeNameMetaFieldDef()->getType();
@@ -286,15 +286,16 @@ class FilterToSchema implements Transform
                         $currentType  = array_pop($typeStack);
                         $resolvedType = static::resolveType($currentType);
 
-                        if ($resolvedType instanceof ObjectType ||
+                        if (
+                            $resolvedType instanceof ObjectType ||
                             $resolvedType instanceof InterfaceType
                         ) {
                             $selections = $node->selectionSet ? $node->selectionSet->selections : null;
                             if (! $selections || count($selections) === 0) {
                                 Visitor::visit($node, [
                                     NodeKind::VARIABLE => static function (
-                                        VariableNode $variableNode
-                                    ) use (&$usedVariables) : void {
+                                        VariableNode $variableNode,
+                                    ) use (&$usedVariables): void {
                                         $index = array_search($variableNode->name->value, $usedVariables);
                                         if ($index === false) {
                                             return;
@@ -304,6 +305,7 @@ class FilterToSchema implements Transform
                                         $usedVariables = array_values($usedVariables);
                                     },
                                 ]);
+
                                 return Visitor::removeNode();
                             }
                         }
@@ -312,51 +314,54 @@ class FilterToSchema implements Transform
                     },
                 ],
                 NodeKind::FRAGMENT_SPREAD => static function (
-                    FragmentSpreadNode $node
+                    FragmentSpreadNode $node,
                 ) use (
                     &$typeStack,
                     $validFragments,
                     $schema,
-                    &$usedFragments
+                    &$usedFragments,
                 ) {
                     if (isset($validFragments[$node->name->value])) {
-                        /** @var Type $parentType */
                         $parentType = static::resolveType($typeStack[count($typeStack) - 1]);
                         $innerType  = $validFragments[$node->name->value];
+                        assert($parentType instanceof Type);
+                        assert($innerType instanceof Type);
 
                         if (! Utils::implementsAbstractType($schema, $parentType, $innerType)) {
                             return Visitor::removeNode();
                         }
 
                         $usedFragments[] = $node->name->value;
+
                         return null;
                     }
 
                     return Visitor::removeNode();
                 },
                 NodeKind::INLINE_FRAGMENT => [
-                    'enter' => static function (InlineFragmentNode $node) use ($schema, &$typeStack) : void {
+                    'enter' => static function (InlineFragmentNode $node) use ($schema, &$typeStack): void {
                         if (! $node->typeCondition) {
                             return;
                         }
 
-                        $innerType = $schema->getType($node->typeCondition->name->value);
-                        /** @var Type $parentType */
+                        $innerType  = $schema->getType($node->typeCondition->name->value);
                         $parentType = static::resolveType($typeStack[count($typeStack) - 1]);
+                        assert($innerType instanceof Type);
+                        assert($parentType instanceof Type);
                         if (Utils::implementsAbstractType($schema, $parentType, $innerType)) {
                             $typeStack[] = $innerType;
                         } else {
                             Visitor::removeNode();
                         }
                     },
-                    'leave' => static function () use (&$typeStack) : void {
+                    'leave' => static function () use (&$typeStack): void {
                         array_pop($typeStack);
                     },
                 ],
-                NodeKind::VARIABLE => static function (VariableNode $node) use (&$usedVariables) : void {
+                NodeKind::VARIABLE => static function (VariableNode $node) use (&$usedVariables): void {
                     $usedVariables[] = $node->name->value;
                 },
-            ]
+            ],
         );
 
         return [
@@ -366,17 +371,16 @@ class FilterToSchema implements Transform
         ];
     }
 
-    private static function resolveType(Type $type) : NamedType
+    private static function resolveType(Type $type): NamedType
     {
         if ($type instanceof NonNull) {
-            return $type->getWrappedType(true);
+            return $type->getInnermostType();
         }
 
         if ($type instanceof ListOfType) {
-            return $type->getWrappedType(true);
+            $type = $type->getInnermostType();
         }
 
-        /** @var NamedType $type */
         return $type;
     }
 
@@ -385,7 +389,7 @@ class FilterToSchema implements Transform
      *
      * @return string[]
      */
-    private static function union(array $arrays) : array
+    private static function union(array $arrays): array
     {
         $cache  = [];
         $result = [];
@@ -399,6 +403,7 @@ class FilterToSchema implements Transform
                 $result[]     = $item;
             }
         }
+
         return $result;
     }
 }

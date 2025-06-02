@@ -11,11 +11,11 @@ use GraphQL\Executor\Executor;
 use GraphQL\Executor\Promise\Adapter\ReactPromiseAdapter;
 use GraphQL\GraphQL;
 use GraphQL\Language\VisitorOperation;
+use GraphQL\Type\Definition\Argument;
 use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Definition\Directive;
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\EnumValueDefinition;
-use GraphQL\Type\Definition\FieldArgument;
 use GraphQL\Type\Definition\FieldDefinition;
 use GraphQL\Type\Definition\InputObjectField;
 use GraphQL\Type\Definition\InputObjectType;
@@ -34,11 +34,13 @@ use ReflectionClass;
 use ReflectionMethod;
 use stdClass;
 use Throwable;
+
 use function array_filter;
 use function array_keys;
 use function array_map;
 use function array_search;
 use function array_slice;
+use function assert;
 use function call_user_func_array;
 use function count;
 use function get_class;
@@ -55,8 +57,7 @@ use function substr;
 
 class DirectivesTest extends TestCase
 {
-    /** @var string */
-    protected $typeDefs = '
+    protected string $typeDefs = '
         directive @schemaDirective(role: String) on SCHEMA
         directive @queryTypeDirective on OBJECT
         directive @queryFieldDirective on FIELD_DEFINITION
@@ -114,10 +115,8 @@ class DirectivesTest extends TestCase
         union WhateverUnion @unionDirective = Person | Query | Mutation
     ';
 
-    /**
-     * @see it('are included in the schema AST')
-     */
-    public function testAreIncludedInTheSchemaAST() : void
+    /** @see it('are included in the schema AST') */
+    public function testAreIncludedInTheSchemaAST(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->typeDefs,
@@ -127,30 +126,30 @@ class DirectivesTest extends TestCase
         $getDirectiveNames = static function ($type) {
             return array_map(static function ($d) {
                 return $d->name->value;
-            }, Utils::toArray($type instanceof Schema ? $type->getAstNode()->directives : $type->astNode->directives));
+            }, Utils::toArray($type instanceof Schema ? $type->astNode->directives : $type->astNode->directives));
         };
 
         $checkDirectives = static function (
             $type,
             $typeDirectiveNames,
-            $fieldDirectiveMap = []
-        ) use ($getDirectiveNames) : void {
+            $fieldDirectiveMap = [],
+        ) use ($getDirectiveNames): void {
             static::assertEquals(
                 $typeDirectiveNames,
-                $getDirectiveNames($type)
+                $getDirectiveNames($type),
             );
 
             foreach (array_keys($fieldDirectiveMap) as $key) {
                 static::assertEquals(
                     $fieldDirectiveMap[$key],
-                    $getDirectiveNames($type->getFields()[$key])
+                    $getDirectiveNames($type->getFields()[$key]),
                 );
             }
         };
 
         static::assertEquals(
             ['schemaDirective'],
-            $getDirectiveNames($schema)
+            $getDirectiveNames($schema),
         );
 
         $checkDirectives(
@@ -158,24 +157,24 @@ class DirectivesTest extends TestCase
             ['queryTypeDirective'],
             [
                 'people' => ['queryFieldDirective'],
-            ]
+            ],
         );
 
         static::assertEquals(
             ['enumTypeDirective'],
-            $getDirectiveNames($schema->getType('Gender'))
+            $getDirectiveNames($schema->getType('Gender')),
         );
 
         $nonBinary = $schema->getType('Gender')->getValues()[0];
 
         static::assertEquals(
             ['enumValueDirective'],
-            $getDirectiveNames($nonBinary)
+            $getDirectiveNames($nonBinary),
         );
 
         $checkDirectives(
             $schema->getType('Date'),
-            ['dateDirective']
+            ['dateDirective'],
         );
 
         $checkDirectives(
@@ -183,7 +182,7 @@ class DirectivesTest extends TestCase
             ['interfaceDirective'],
             [
                 'name' => ['interfaceFieldDirective'],
-            ]
+            ],
         );
 
         $checkDirectives(
@@ -192,7 +191,7 @@ class DirectivesTest extends TestCase
             [
                 'name' => ['inputFieldDirective'],
                 'gender' => [],
-            ]
+            ],
         );
 
         $checkDirectives(
@@ -200,12 +199,12 @@ class DirectivesTest extends TestCase
             ['mutationTypeDirective'],
             [
                 'addPerson' => ['mutationMethodDirective'],
-            ]
+            ],
         );
 
         static::assertEquals(
             ['mutationArgumentDirective'],
-            $getDirectiveNames($schema->getMutationType()->getFields()['addPerson']->args[0])
+            $getDirectiveNames($schema->getMutationType()->getFields()['addPerson']->args[0]),
         );
 
         $checkDirectives(
@@ -214,19 +213,17 @@ class DirectivesTest extends TestCase
             [
                 'id' => ['objectFieldDirective'],
                 'name' => [],
-            ]
+            ],
         );
 
         $checkDirectives(
             $schema->getType('WhateverUnion'),
-            ['unionDirective']
+            ['unionDirective'],
         );
     }
 
-    /**
-     * @see it('can be implemented with SchemaDirectiveVisitor')
-     */
-    public function testCanBeImplementedWithSchemaDirectiveVisitor() : void
+    /** @see it('can be implemented with SchemaDirectiveVisitor') */
+    public function testCanBeImplementedWithSchemaDirectiveVisitor(): void
     {
         $visited    = [];
         $schema     = GraphQLTools::makeExecutableSchema([
@@ -240,30 +237,28 @@ class DirectivesTest extends TestCase
             [
                 'queryTypeDirective' => new class ($visited, $visitCount) extends SchemaDirectiveVisitor
                 {
-                    /** @var string */
-                    public static $description = 'A @directive for query object types';
+                    public static string $description = 'A @directive for query object types';
                     /** @var ObjectType[] */
-                    protected $visited;
-                    /** @var int */
-                    protected $visitCount;
+                    protected array $visited;
+                    protected int $visitCount;
 
-                    /**
-                     * @param ObjectType[] $visited
-                     */
+                    /** @param ObjectType[] $visited */
                     public function __construct(array &$visited, int &$visitCount)
                     {
                         $this->visited    = &$visited;
                         $this->visitCount = &$visitCount;
                     }
 
-                    public function visitObject(ObjectType $object) : void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         $this->visited[] = $object;
 
                         $this->visitCount++;
+
+                        return null;
                     }
                 },
-            ]
+            ],
         );
 
         static::assertEquals(1, count($visited));
@@ -273,10 +268,8 @@ class DirectivesTest extends TestCase
         }
     }
 
-    /**
-     * @see it('can visit the schema itself')
-     */
-    public function testCanVisitTheSchemaItself() : void
+    /** @see it('can visit the schema itself') */
+    public function testCanVisitTheSchemaItself(): void
     {
         $visited = [];
         $schema  = GraphQLTools::makeExecutableSchema([
@@ -290,32 +283,28 @@ class DirectivesTest extends TestCase
                 'schemaDirective' => new class ($visited) extends SchemaDirectiveVisitor
                 {
                     /** @var Schema[] */
-                    private $visited;
+                    private array $visited;
 
-                    /**
-                     * @param Schema[] $visited
-                     */
+                    /** @param Schema[] $visited */
                     public function __construct(array &$visited)
                     {
                         $this->visited = &$visited;
                     }
 
-                    public function visitSchema(Schema $s) : void
+                    public function visitSchema(Schema $s): void
                     {
                         $this->visited[] = $s;
                     }
                 },
-            ]
+            ],
         );
 
         static::assertCount(1, $visited);
         static::assertEquals($schema, $visited[0]);
     }
 
-    /**
-     * @see it('can visit fields within object types')
-     */
-    public function testCanVisitFieldsWithinObjectTypes() : void
+    /** @see it('can visit fields within object types') */
+    public function testCanVisitFieldsWithinObjectTypes(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->typeDefs,
@@ -332,39 +321,38 @@ class DirectivesTest extends TestCase
             [
                 'mutationTypeDirective' => new class ($mutationObjectType) extends SchemaDirectiveVisitor
                 {
-                    /** @var ObjectType */
-                    private $mutationObjectType;
+                    private ObjectType|null $mutationObjectType;
 
-                    public function __construct(?ObjectType &$mutationObjectType)
+                    public function __construct(ObjectType|null &$mutationObjectType)
                     {
                         $this->mutationObjectType = &$mutationObjectType;
                     }
 
-                    public function visitObject(ObjectType $object) : void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         $this->mutationObjectType = $object;
                         TestCase::assertEquals($object, $this->visitedType);
                         TestCase::assertEquals('Mutation', $object->name);
+
+                        return null;
                     }
                 },
                 'mutationMethodDirective' => new class (
-                    $mutationObjectType, $mutationField) extends SchemaDirectiveVisitor
+                    $mutationObjectType,
+                    $mutationField
+                ) extends SchemaDirectiveVisitor
                 {
-                    /** @var ObjectType */
-                    private $mutationObjectType;
-                    /** @var FieldDefinition */
-                    private $mutationField;
+                    private ObjectType|null $mutationObjectType;
+                    private FieldDefinition|null $mutationField;
 
-                    public function __construct(?ObjectType &$mutationObjectType, ?FieldDefinition &$mutationField)
+                    public function __construct(ObjectType|null &$mutationObjectType, FieldDefinition|null &$mutationField)
                     {
                         $this->mutationObjectType = &$mutationObjectType;
                         $this->mutationField      = &$mutationField;
                     }
 
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details) : void
+                    /** @param mixed[] $details */
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         TestCase::assertEquals($field, $this->visitedType);
                         TestCase::assertEquals('addPerson', $field->name);
@@ -372,6 +360,8 @@ class DirectivesTest extends TestCase
                         TestCase::assertEquals(1, count($field->args));
 
                         $this->mutationField = $field;
+
+                        return null;
                     }
                 },
                 'mutationArgumentDirective' => new class (
@@ -379,122 +369,116 @@ class DirectivesTest extends TestCase
                     $mutationField
                 ) extends SchemaDirectiveVisitor
                 {
-                    /** @var ObjectType */
-                    private $mutationObjectType;
-                    /** @var FieldDefinition */
-                    private $mutationField;
+                    private ObjectType|null $mutationObjectType;
+                    private FieldDefinition|null $mutationField;
 
-                    public function __construct(?ObjectType &$mutationObjectType, ?FieldDefinition &$mutationField)
+                    public function __construct(ObjectType|null &$mutationObjectType, FieldDefinition|null &$mutationField)
                     {
                         $this->mutationObjectType = &$mutationObjectType;
                         $this->mutationField      = &$mutationField;
                     }
 
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitArgumentDefinition(FieldArgument $arg, array $details) : void
+                    /** @param mixed[] $details */
+                    public function visitArgumentDefinition(Argument $arg, array $details): mixed
                     {
                         TestCase::assertEquals($arg, $this->visitedType);
                         TestCase::assertEquals('input', $arg->name);
                         TestCase::assertEquals($this->mutationField, $details['field']);
                         TestCase::assertEquals($this->mutationObjectType, $details['objectType']);
                         TestCase::assertEquals($arg, $details['field']->args[0]);
+
+                        return null;
                     }
                 },
                 'enumTypeDirective' => new class ($enumObjectType) extends SchemaDirectiveVisitor
                 {
-                    /** @var EnumType */
-                    private $enumObjectType;
+                    private EnumType|null $enumObjectType;
 
-                    public function __construct(?EnumType &$enumObjectType)
+                    public function __construct(EnumType|null &$enumObjectType)
                     {
                         $this->enumObjectType = &$enumObjectType;
                     }
 
-                    public function visitEnum(EnumType $enumType) : void
+                    public function visitEnum(EnumType $enumType): mixed
                     {
                         TestCase::assertEquals($enumType, $this->visitedType);
                         TestCase::assertEquals('Gender', $enumType->name);
                         $this->enumObjectType = $enumType;
+
+                        return null;
                     }
                 },
                 'enumValueDirective' => new class ($enumObjectType) extends SchemaDirectiveVisitor
                 {
-                    /** @var EnumType */
-                    private $enumObjectType;
+                    private EnumType|null $enumObjectType;
 
-                    public function __construct(?EnumType &$enumObjectType)
+                    public function __construct(EnumType|null &$enumObjectType)
                     {
                         $this->enumObjectType = &$enumObjectType;
                     }
 
-                    /**
-                     * @param mixed[] $details
-                     *
-                     * @return mixed|void
-                     */
-                    public function visitEnumValue(EnumValueDefinition $value, array $details)
+                    /** @param mixed[] $details */
+                    public function visitEnumValue(EnumValueDefinition $value, array $details): mixed
                     {
                         TestCase::assertEquals($value, $this->visitedType);
                         TestCase::assertEquals('NONBINARY', $value->name);
                         TestCase::assertEquals('NONBINARY', $value->value);
                         TestCase::assertEquals($this->enumObjectType, $details['enumType']);
+
+                        return null;
                     }
                 },
                 'inputTypeDirective' => new class ($inputObjectType) extends SchemaDirectiveVisitor
                 {
-                    /** @var InputObjectType */
-                    private $inputObjectType;
+                    private InputObjectType|null $inputObjectType;
 
-                    public function __construct(?InputObjectType &$inputObjectType)
+                    public function __construct(InputObjectType|null &$inputObjectType)
                     {
                         $this->inputObjectType = &$inputObjectType;
                     }
 
-                    public function visitInputObject(InputObjectType $object) : void
+                    public function visitInputObject(InputObjectType $object): mixed
                     {
                         $this->inputObjectType = $object;
                         TestCase::assertEquals($object, $this->visitedType);
                         TestCase::assertEquals('PersonInput', $object->name);
+
+                        return null;
                     }
                 },
                 'inputFieldDirective' => new class ($inputObjectType) extends SchemaDirectiveVisitor
                 {
-                    /** @var InputObjectType */
-                    private $inputObjectType;
+                    private InputObjectType|null $inputObjectType;
 
-                    public function __construct(?InputObjectType &$inputObjectType)
+                    public function __construct(InputObjectType|null &$inputObjectType)
                     {
                         $this->inputObjectType = &$inputObjectType;
                     }
 
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitInputFieldDefinition(InputObjectField $field, array $details) : void
+                    /** @param mixed[] $details */
+                    public function visitInputFieldDefinition(InputObjectField $field, array $details): mixed
                     {
                         TestCase::assertEquals($field, $this->visitedType);
                         TestCase::assertEquals('name', $field->name);
                         TestCase::assertEquals($this->inputObjectType, $details['objectType']);
+
+                        return null;
                     }
                 },
-            ]
+            ],
         );
     }
 
-    /**
-     * @see it('can check if a visitor method is implemented')
-     */
-    public function testCanCheckIfAVisitorMethodIsImplemented() : void
+    /** @see it('can check if a visitor method is implemented') */
+    public function testCanCheckIfAVisitorMethodIsImplemented(): void
     {
         $visitor = new class extends SchemaVisitor
         {
-            public function notVisitorMethod() : void
+            public function notVisitorMethod(): void
             {
             }
 
-            public function visitObject(ObjectType $object) : ObjectType
+            public function visitObject(ObjectType $object): ObjectType
             {
                 return $object;
             }
@@ -509,7 +493,7 @@ class DirectivesTest extends TestCase
     /**
      * it('can use visitSchema for simple visitor patterns')
      */
-    public function testCanUseVisitSchemaForSimpleVisitorPatterns() : void
+    public function testCanUseVisitSchemaForSimpleVisitorPatterns(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->typeDefs,
@@ -518,17 +502,16 @@ class DirectivesTest extends TestCase
 
         $simpleVisitor = new class ($schema) extends SchemaVisitor
         {
-            /** @var int */
-            public $visitCount = 0;
+            public int $visitCount = 0;
             /** @var string[] */
-            public $names = [];
+            public array $names = [];
 
             public function __construct(Schema $s)
             {
                 $this->schema = $s;
             }
 
-            public function visit() : void
+            public function visit(): void
             {
                 // More complicated visitor implementations might use the
                 // visitorSelector function more selectively, but this SimpleVisitor
@@ -537,14 +520,16 @@ class DirectivesTest extends TestCase
                     $this->schema,
                     function () {
                         return [$this];
-                    }
+                    },
                 );
             }
 
-            public function visitObject(ObjectType $object) : void
+            public function visitObject(ObjectType $object): mixed
             {
                 TestCase::assertEquals($object, $this->schema->getType($object->name));
                 $this->names[] = $object->name;
+
+                return null;
             }
         };
 
@@ -557,14 +542,12 @@ class DirectivesTest extends TestCase
                 'Person',
                 'Query',
             ],
-            $simpleVisitor->names
+            $simpleVisitor->names,
         );
     }
 
-    /**
-     * @see it('can use SchemaDirectiveVisitor as a no-op visitor')
-     */
-    public function testCanUseSchemaDirectiveVisitorAsANoOpVisitor() : void
+    /** @see it('can use SchemaDirectiveVisitor as a no-op visitor') */
+    public function testCanUseSchemaDirectiveVisitorAsANoOpVisitor(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->typeDefs,
@@ -576,9 +559,9 @@ class DirectivesTest extends TestCase
         $enthusiasticVisitor = new class extends SchemaDirectiveVisitor
         {
             /** @var bool[] */
-            public static $methodNamesEncountered;
+            public static array $methodNamesEncountered;
 
-            public static function implementsVisitorMethod(string $name) : bool
+            public static function implementsVisitorMethod(string $name): bool
             {
                 // Pretend this class implements all visitor methods. This is safe
                 // because the SchemaVisitor base class provides empty stubs for all
@@ -608,7 +591,7 @@ class DirectivesTest extends TestCase
                 'objectTypeDirective' => $enthusiasticVisitor,
                 'objectFieldDirective' => $enthusiasticVisitor,
                 'unionDirective' => $enthusiasticVisitor,
-            ]
+            ],
         );
 
         $reflection = new ReflectionClass($enthusiasticVisitor);
@@ -632,14 +615,12 @@ class DirectivesTest extends TestCase
 
         static::assertEquals(
             $methodNames,
-            $methodNamesEncountered
+            $methodNamesEncountered,
         );
     }
 
-    /**
-     * @see it('can handle declared arguments')
-     */
-    public function testCanHandleDeclaredArguments() : void
+    /** @see it('can handle declared arguments') */
+    public function testCanHandleDeclaredArguments(): void
     {
         $schemaText = '
             directive @oyez(
@@ -671,10 +652,9 @@ class DirectivesTest extends TestCase
 
         $oyezVisitor = new class extends SchemaDirectiveVisitor
         {
-            /** @var Schema */
-            public static $mySchema;
+            public static Schema $mySchema;
 
-            public static function getDirectiveDeclaration(string $name, Schema $theSchema) : ?Directive
+            public static function getDirectiveDeclaration(string $name, Schema $theSchema): Directive|null
             {
                 $schema = static::$mySchema;
                 TestCase::assertEquals($schema, $theSchema);
@@ -691,16 +671,16 @@ class DirectivesTest extends TestCase
                 return $prev;
             }
 
-            public function visitObject(ObjectType $object) : void
+            public function visitObject(ObjectType $object): mixed
             {
                 ++$this->context->objectCount;
                 TestCase::assertEquals(3, $this->args['times']);
+
+                return null;
             }
 
-            /**
-             * @param mixed[] $details
-             */
-            public function visitFieldDefinition(FieldDefinition $field, array $details) : void
+            /** @param mixed[] $details */
+            public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
             {
                 ++$this->context->fieldCount;
                 if ($field->name === 'judge') {
@@ -710,7 +690,10 @@ class DirectivesTest extends TestCase
                         TestCase::assertEquals(3, $this->args['times']);
                     }
                 }
+
                 TestCase::assertEquals('IMPARTIAL', $this->args['party']);
+
+                return null;
             }
         };
 
@@ -719,7 +702,7 @@ class DirectivesTest extends TestCase
         $visitors = SchemaDirectiveVisitor::visitSchemaDirectives(
             $schema,
             ['oyez' => $oyezVisitor],
-            $context
+            $context,
         );
 
         static::assertEquals(1, $context->objectCount);
@@ -730,14 +713,12 @@ class DirectivesTest extends TestCase
             ['Courtroom', 'judge', 'marshall'],
             array_map(static function ($v) {
                 return $v->visitedType->name;
-            }, $visitors['oyez'])
+            }, $visitors['oyez']),
         );
     }
 
-    /**
-     * @see it('can be used to implement the @upper example')
-     */
-    public function testCanBeUsedToImplementTheUpperExample() : void
+    /** @see it('can be used to implement the @upper example') */
+    public function testCanBeUsedToImplementTheUpperExample(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => '
@@ -749,10 +730,8 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'upper' => new class extends SchemaDirectiveVisitor
                 {
-                    /**
-                     * @param mixed[] $detail
-                     */
-                    public function visitFieldDefinition(FieldDefinition $field, array $detail) : void
+                    /** @param mixed[] $detail */
+                    public function visitFieldDefinition(FieldDefinition $field, array $detail): mixed
                     {
                         $resolve          = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $field->resolveFn = static function (...$args) use ($resolve) {
@@ -760,8 +739,11 @@ class DirectivesTest extends TestCase
                             if (is_string($result)) {
                                 return strtoupper($result);
                             }
+
                             return $result;
                         };
+
+                        return null;
                     }
                 },
             ],
@@ -780,16 +762,14 @@ class DirectivesTest extends TestCase
                 query {
                     hello
                 }
-            '
+            ',
         );
 
         static::assertEquals(['hello' => 'HELLO WORLD'], $result->data);
     }
 
-    /**
-     * @see it('can be used to implement the @date example')
-     */
-    public function testCanBeUsedToImplementTheDateExample() : void
+    /** @see it('can be used to implement the @date example') */
+    public function testCanBeUsedToImplementTheDateExample(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => '
@@ -802,10 +782,8 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'date' => new class extends SchemaDirectiveVisitor
                 {
-                    /**
-                     * @param mixed[] $detail
-                     */
-                    public function visitFieldDefinition(FieldDefinition $field, array $detail) : void
+                    /** @param mixed[] $detail */
+                    public function visitFieldDefinition(FieldDefinition $field, array $detail): mixed
                     {
                         $resolve = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $format  = $this->args['format'];
@@ -814,8 +792,11 @@ class DirectivesTest extends TestCase
 
                         $field->resolveFn = static function (...$args) use ($resolve, $format) {
                             $date = $resolve(...$args);
+
                             return DateTime::createFromFormat(DateTime::ATOM, $date)->format($format);
                         };
+
+                        return null;
                     }
                 },
             ],
@@ -830,31 +811,27 @@ class DirectivesTest extends TestCase
 
         $result = GraphQL::executeQuery(
             $schema,
-            'query { today }'
+            'query { today }',
         );
 
         static::assertEquals(
             ['today' => 'February 26, 2018'],
-            $result->data
+            $result->data,
         );
     }
 
-    /**
-     * @see it('can be used to implement the @date by adding an argument')
-     */
-    public function testCanBeUsedToImplementTheDateByAddingAnArgument() : void
+    /** @see it('can be used to implement the @date by adding an argument') */
+    public function testCanBeUsedToImplementTheDateByAddingAnArgument(): void
     {
         $formattableDateDirective = new class extends SchemaDirectiveVisitor
         {
-            /**
-             * @param mixed[] $detail
-             */
-            public function visitFieldDefinition(FieldDefinition $field, array $detail) : void
+            /** @param mixed[] $detail */
+            public function visitFieldDefinition(FieldDefinition $field, array $detail): mixed
             {
                 $resolve       = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                 $defaultFormat = $this->args['defaultFormat'];
 
-                $field->args[] = new FieldArgument([
+                $field->args[] = new Argument([
                     'name' => 'format',
                     'type' => Type::string(),
                 ]);
@@ -863,8 +840,11 @@ class DirectivesTest extends TestCase
                 $field->resolveFn = static function ($source, $args, $context, $info) use ($resolve, $defaultFormat) {
                     $format = $args['format'] ?? $defaultFormat;
                     $date   = $resolve($source, $args, $context, $info);
+
                     return $date->format($format);
                 };
+
+                return null;
             }
         };
 
@@ -884,6 +864,7 @@ class DirectivesTest extends TestCase
                     'today' => static function () {
                         $date = new DateTime();
                         $date->setTimestamp(1521131357);
+
                         return $date;
                     },
                 ],
@@ -898,7 +879,7 @@ class DirectivesTest extends TestCase
 
         static::assertEquals(
             ['today' => 'March 15, 2018'],
-            $resultNoArg->data
+            $resultNoArg->data,
         );
 
         $resultWithArg = GraphQL::executeQuery($schema, 'query { today(format: "d M Y") }');
@@ -909,19 +890,18 @@ class DirectivesTest extends TestCase
 
         static::assertEquals(
             ['today' => '15 Mar 2018'],
-            $resultWithArg->data
+            $resultWithArg->data,
         );
     }
 
-    /**
-     * @see it('can be used to implement the @intl example')
-     */
-    public function testCanBeUsedToImplementTheIntlExample() : void
+    /** @see it('can be used to implement the @intl example') */
+    public function testCanBeUsedToImplementTheIntlExample(): void
     {
         $translate = static function ($text, $path, $locale) {
             static::assertEquals('hello', $text);
             static::assertEquals(['Query', 'greeting'], $path);
             static::assertEquals('fr', $locale);
+
             return 'bonjour';
         };
 
@@ -937,24 +917,17 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'intl' => new class ($context, $translate) extends SchemaDirectiveVisitor
                 {
-                    /** @var mixed[] */
-                    private $ctx;
                     /** @var callable */
                     private $translate;
 
-                    /**
-                     * @param mixed[] $ctx
-                     */
-                    public function __construct(array $ctx, callable $translate)
+                    /** @param mixed[] $ctx */
+                    public function __construct(private array $ctx, callable $translate)
                     {
-                        $this->ctx       = $ctx;
                         $this->translate = $translate;
                     }
 
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details) : void
+                    /** @param mixed[] $details */
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         $resolve          = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $field->resolveFn = function (...$args) use ($resolve, $details, $field) {
@@ -963,8 +936,11 @@ class DirectivesTest extends TestCase
                             $path = [$details['objectType']->name, $field->name];
                             TestCase::assertEquals($this->ctx, $args[2]);
                             $translate = $this->translate;
+
                             return $translate($defaultText, $path, $this->ctx['locale']);
                         };
+
+                        return null;
                     }
                 },
             ],
@@ -981,19 +957,17 @@ class DirectivesTest extends TestCase
             $schema,
             'query {greeting }',
             null,
-            $context
+            $context,
         );
 
         static::assertEquals(
             ['greeting' => 'bonjour'],
-            $result->data
+            $result->data,
         );
     }
 
-    /**
-     * @see it('can be used to implement the @auth example')
-     */
-    public function testCanBeUsedToImplementTHeAuthExample() : void
+    /** @see it('can be used to implement the @auth example') */
+    public function testCanBeUsedToImplementTHeAuthExample(): void
     {
         $roles = [
             'UNKNOWN',
@@ -1005,21 +979,12 @@ class DirectivesTest extends TestCase
         $getUser = function ($token) use ($roles) {
             return new class ($token, $roles)
             {
-                /** @var string */
-                private $token;
-                /** @var string[] */
-                private $roles;
-
-                /**
-                 * @param string[] $roles
-                 */
-                public function __construct(string $token, array $roles)
+                /** @param string[] $roles */
+                public function __construct(private string $token, private array $roles)
                 {
-                    $this->token = $token;
-                    $this->roles = $roles;
                 }
 
-                public function hasRole(string $role) : bool
+                public function hasRole(string $role): bool
                 {
                     $tokenIndex = array_search($this->token, $this->roles);
                     $roleIndex  = array_search($role, $this->roles);
@@ -1039,29 +1004,34 @@ class DirectivesTest extends TestCase
                 $this->getUser = $getUser;
             }
 
-            public function visitObject(ObjectType $type) : void
+            public function visitObject(ObjectType $type): mixed
             {
                 $this->ensureFieldsWrapped($type);
                 $type->_requiredAuthRole = $this->args['requires'];
+
+                return null;
             }
+
             // Visitor methods for nested types like fields and arguments
             // also receive a details object that provides information about
             // the parent and grandparent types.
-            /**
-             * @param mixed[] $details
-             */
-            public function visitFieldDefinition(FieldDefinition $field, array $details) : void
+
+            /** @param mixed[] $details */
+            public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
             {
                 $this->ensureFieldsWrapped($details['objectType']);
                 $field->_requiredAuthRole = $this->args['requires'];
+
+                return null;
             }
 
-            public function ensureFieldsWrapped(ObjectType $objectType) : void
+            public function ensureFieldsWrapped(ObjectType $objectType): void
             {
                 // Mark the GraphQLObjectType object to avoid re-wrapping:
                 if ($objectType->_authFieldsWrapped ?? false) {
                     return;
                 }
+
                 $objectType->_authFieldsWrapped = true;
 
                 $fields = $objectType->getFields();
@@ -1145,7 +1115,7 @@ class DirectivesTest extends TestCase
                 null,
                 [
                     'headers' => ['authToken' => $role],
-                ]
+                ],
             );
         };
 
@@ -1167,7 +1137,7 @@ class DirectivesTest extends TestCase
             sort($actualNames);
             static::assertEquals(
                 $expectedNames,
-                $actualNames
+                $actualNames,
             );
 
             return $data;
@@ -1191,7 +1161,7 @@ class DirectivesTest extends TestCase
      *
      * @see it('can be used to implement the @length example')
      */
-    public function testCanBeUsedToImplementTheLengthExample() : void
+    public function testCanBeUsedToImplementTheLengthExample(): void
     {
         $createLimitedLengthType = function ($type, $maxLength) {
             return new class ($type, $maxLength) extends CustomScalarType
@@ -1206,7 +1176,7 @@ class DirectivesTest extends TestCase
 
                             if (strlen($value) > $maxLength) {
                                 return reject(
-                                    new Error(sprintf('expected %s to be at most %s', strlen($value), $maxLength))
+                                    new Error(sprintf('expected %s to be at most %s', strlen($value), $maxLength)),
                                 );
                             }
 
@@ -1250,36 +1220,35 @@ class DirectivesTest extends TestCase
                         $this->createLimitedLengthType = $createLimitedLengthType;
                     }
 
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitInputFieldDefinition(InputObjectField $field, array $details) : void
+                    /** @param mixed[] $details */
+                    public function visitInputFieldDefinition(InputObjectField $field, array $details): mixed
                     {
                         $this->wrapType($field);
+
+                        return null;
                     }
 
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details) : void
+                    /** @param mixed[] $details */
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         $this->wrapType($field);
+
+                        return null;
                     }
 
-                    /**
-                     * @param FieldDefinition|InputObjectField $field
-                     */
-                    private function wrapType($field) : void
+                    private function wrapType(FieldDefinition|InputObjectField $field): void
                     {
                         $createLimitedLengthType = $this->createLimitedLengthType;
-                        if ($field->getType() instanceof NonNull
-                            && $field->getType()->getWrappedType() instanceof ScalarType) {
+                        if (
+                            $field->getType() instanceof NonNull
+                            && $field->getType()->getWrappedType() instanceof ScalarType
+                        ) {
                             Utils::forceSet(
                                 $field,
                                 'type',
                                 new NonNull(
-                                    $createLimitedLengthType($field->getType()->getWrappedType(), $this->args['max'])
-                                )
+                                    $createLimitedLengthType($field->getType()->getWrappedType(), $this->args['max']),
+                                ),
                             );
                         } else {
                             if (! ($field->getType() instanceof ScalarType)) {
@@ -1289,7 +1258,7 @@ class DirectivesTest extends TestCase
                             Utils::forceSet(
                                 $field,
                                 'type',
-                                $createLimitedLengthType($field->getType(), $this->args['max'])
+                                $createLimitedLengthType($field->getType(), $this->args['max']),
                             );
                         }
                     }
@@ -1320,7 +1289,7 @@ class DirectivesTest extends TestCase
                         title
                     }
                 }
-            '
+            ',
         )->then(static function ($result) use ($schema) {
             $errors = $result->errors;
 
@@ -1336,23 +1305,21 @@ class DirectivesTest extends TestCase
                             title
                         }
                     }
-                '
+                ',
             );
-        })->then(static function ($result) : void {
+        })->then(static function ($result): void {
             static::assertEmpty($result->errors);
             static::assertEquals(
                 [
                     'createBook' => ['title' => 'safe title'],
                 ],
-                $result->data
+                $result->data,
             );
         });
     }
 
-    /**
-     * @see it('can be used to implement the @uniqueID example')
-     */
-    public function testCanBeUsedToImplementTheUniqueIDExample() : void
+    /** @see it('can be used to implement the @uniqueID example') */
+    public function testCanBeUsedToImplementTheUniqueIDExample(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => '
@@ -1373,11 +1340,11 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'uniqueID' => new class extends SchemaDirectiveVisitor
                 {
-                    public function visitObject(ObjectType $type) : void
+                    public function visitObject(ObjectType $type): mixed
                     {
                         ['name' => $name, 'from' => $from] = $this->args;
                         $fields                            = $type->getFields();
-                        $fields[$name]                     = FieldDefinition::create([
+                        $fields[$name]                     = new FieldDefinition([
                             'name' => $name,
                             'type' => Type::id(),
                             'description' => 'Unique ID',
@@ -1387,10 +1354,13 @@ class DirectivesTest extends TestCase
                                 foreach ($from as $fieldName) {
                                     $hash .= $object[$fieldName];
                                 }
+
                                 return sha1($hash);
                             },
                         ]);
                         Utils::forceSet($type, 'fields', $fields);
+
+                        return null;
                     }
                 },
             ],
@@ -1431,7 +1401,7 @@ class DirectivesTest extends TestCase
                         address
                     }
                 }
-            '
+            ',
         );
 
         $data = $result->data;
@@ -1444,7 +1414,7 @@ class DirectivesTest extends TestCase
                     'name' => 'Ben',
                 ],
             ],
-            $data['people']
+            $data['people'],
         );
 
         static::assertEquals(
@@ -1455,61 +1425,59 @@ class DirectivesTest extends TestCase
                     'address' => '140 10th St',
                 ],
             ],
-            $data['locations']
+            $data['locations'],
         );
     }
 
-    /**
-     * @see it('automatically updates references to changed types')
-     */
-    public function testAutomaticallyUpdatesReferencesToChangedTypes() : void
+    /** @see it('automatically updates references to changed types') */
+    public function testAutomaticallyUpdatesReferencesToChangedTypes(): void
     {
-        $HumanType = null;
+        $humanType = null;
         $schema    = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->typeDefs,
             'schemaDirectives' => [
-                'objectTypeDirective' => new class ($HumanType) extends SchemaDirectiveVisitor
+                'objectTypeDirective' => new class ($humanType) extends SchemaDirectiveVisitor
                 {
-                    /** @var ObjectType */
-                    private $HumanType;
+                    private ObjectType|null $humanType;
 
-                    public function __construct(?ObjectType &$HumanType)
+                    public function __construct(ObjectType|null &$HumanType)
                     {
-                        $this->HumanType = &$HumanType;
+                        $this->humanType = &$HumanType;
                     }
 
-                    public function visitObject(ObjectType $object) : ObjectType
+                    public function visitObject(ObjectType $object): ObjectType
                     {
-                        $this->HumanType       = clone $object;
-                        $this->HumanType->name = 'Human';
-                        return $this->HumanType;
+                        $this->humanType       = clone $object;
+                        $this->humanType->name = 'Human';
+
+                        return $this->humanType;
                     }
                 },
             ],
             'resolverValidationOptions' => ['requireResolversForResolveType' => false],
         ]);
 
-        $Query      = $schema->getQueryType();
-        $peopleType = $Query->getField('people')->getType();
+        $query      = $schema->getQueryType();
+        $peopleType = $query->getField('people')->getType();
         if (! ($peopleType instanceof ListOfType)) {
             throw new Exception('Query.people not a GraphQLList type');
         }
 
-        static::assertEquals($HumanType, $peopleType->ofType);
+        static::assertEquals($humanType, $peopleType->getWrappedType());
 
-        $Mutation            = $schema->getMutationType();
-        $addPersonResultType = $Mutation->getField('addPerson')->getType();
-        static::assertEquals($HumanType, $addPersonResultType);
+        $mutation            = $schema->getMutationType();
+        $addPersonResultType = $mutation->getField('addPerson')->getType();
+        static::assertEquals($humanType, $addPersonResultType);
 
-        $WhateverUnion = $schema->getType('WhateverUnion');
+        $whateverUnion = $schema->getType('WhateverUnion');
 
         $found = false;
-        foreach ($WhateverUnion->getTypes() as $type) {
+        foreach ($whateverUnion->getTypes() as $type) {
             if ($type->name !== 'Human') {
                 continue;
             }
 
-            static::assertEquals($HumanType, $type);
+            static::assertEquals($humanType, $type);
             $found = true;
         }
 
@@ -1519,14 +1487,12 @@ class DirectivesTest extends TestCase
         try {
             $schema->getType('Person');
             static::fail();
-        } catch (Throwable $e) {
+        } catch (Throwable) {
         }
     }
 
-    /**
-     * @see it('can remove enum values')
-     */
-    public function testCanRemoveEnumValues() : void
+    /** @see it('can remove enum values') */
+    public function testCanRemoveEnumValues(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => '
@@ -1543,10 +1509,8 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'remove' => new class extends SchemaDirectiveVisitor
                 {
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitEnumValue(EnumValueDefinition $value, array $details) : ?VisitorOperation
+                    /** @param mixed[] $details */
+                    public function visitEnumValue(EnumValueDefinition $value, array $details): VisitorOperation|null
                     {
                         if ($this->args['if']) {
                             return SchemaDirectiveVisitor::removeNode();
@@ -1566,15 +1530,13 @@ class DirectivesTest extends TestCase
                 static function ($value) {
                     return $value->name;
                 },
-                $AgeUnit->getValues()
-            )
+                $AgeUnit->getValues(),
+            ),
         );
     }
 
-    /**
-     * @see it('can swap names of GraphQLNamedType objects')
-     */
-    public function testCanSwapNamesOfGraphQLNamedTypeObjects() : void
+    /** @see it('can swap names of GraphQLNamedType objects') */
+    public function testCanSwapNamesOfGraphQLNamedTypeObjects(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => '
@@ -1593,34 +1555,34 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'rename' => new class extends SchemaDirectiveVisitor
                 {
-                    public function visitObject(ObjectType $object) : void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         $object->name = $this->args['to'];
+
+                        return null;
                     }
                 },
             ],
         ]);
 
-        /** @var ObjectType $Human */
-        $Human = $schema->getType('Human');
-        static::assertEquals('Human', $Human->name);
-        static::assertEquals(Type::int(), $Human->getField('heightInInches')->getType());
+        $human = $schema->getType('Human');
+        assert($human instanceof ObjectType);
+        static::assertEquals('Human', $human->name);
+        static::assertEquals(Type::int(), $human->getField('heightInInches')->getType());
 
-        /** @var ObjectType $Person */
-        $Person = $schema->getType('Person');
-        static::assertEquals('Person', $Person->name);
-        static::assertEquals($schema->getType('Date'), $Person->getField('born')->getType());
+        $person = $schema->getType('Person');
+        assert($person instanceof ObjectType);
+        static::assertEquals('Person', $person->name);
+        static::assertEquals($schema->getType('Date'), $person->getField('born')->getType());
 
-        $Query = $schema->getQueryType();
-        /** @var ListOfType $peopleType */
-        $peopleType = $Query->getField('people')->getType();
-        static::assertEquals($Human, $peopleType->ofType);
+        $query      = $schema->getQueryType();
+        $peopleType = $query->getField('people')->getType();
+        assert($peopleType instanceof ListOfType);
+        static::assertEquals($human, $peopleType->getWrappedType());
     }
 
-    /**
-     * @see it('does not enforce query directive locations (issue #680)')
-     */
-    public function testDoesNotEnforceQueryDirectiveLocations() : void
+    /** @see it('does not enforce query directive locations (issue #680)') */
+    public function testDoesNotEnforceQueryDirectiveLocations(): void
     {
         $visited = [];
         $schema  = GraphQLTools::makeExecutableSchema([
@@ -1634,20 +1596,20 @@ class DirectivesTest extends TestCase
                 'hasScope' => new class ($visited) extends SchemaDirectiveVisitor
                 {
                     /** @var ObjectType[] */
-                    private $visited;
+                    private array $visited;
 
-                    /**
-                     * @param ObjectType[] $visited
-                     */
+                    /** @param ObjectType[] $visited */
                     public function __construct(array &$visited)
                     {
                         $this->visited = &$visited;
                     }
 
-                    public function visitObject(ObjectType $object) : void
+                    public function visitObject(ObjectType $object): mixed
                     {
                         TestCase::assertEquals('Query', $object->name);
                         $this->visited[] = $object;
+
+                        return null;
                     }
                 },
             ],
@@ -1659,10 +1621,8 @@ class DirectivesTest extends TestCase
         }
     }
 
-    /**
-     * @see it('allows multiple directives when first replaces type (issue #851)')
-     */
-    public function testAllowsMultipleDirectivesWhenFirstReplacesType() : void
+    /** @see it('allows multiple directives when first replaces type (issue #851)') */
+    public function testAllowsMultipleDirectivesWhenFirstReplacesType(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => '
@@ -1675,10 +1635,8 @@ class DirectivesTest extends TestCase
             'schemaDirectives' => [
                 'upper' => new class extends SchemaDirectiveVisitor
                 {
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details) : FieldDefinition
+                    /** @param mixed[] $details */
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): FieldDefinition
                     {
                         $resolve = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
 
@@ -1688,6 +1646,7 @@ class DirectivesTest extends TestCase
                             if (is_string($result)) {
                                 return strtoupper($result);
                             }
+
                             return $result;
                         };
 
@@ -1696,10 +1655,8 @@ class DirectivesTest extends TestCase
                 },
                 'reverse' => new class extends SchemaDirectiveVisitor
                 {
-                    /**
-                     * @param mixed[] $details
-                     */
-                    public function visitFieldDefinition(FieldDefinition $field, array $details) : void
+                    /** @param mixed[] $details */
+                    public function visitFieldDefinition(FieldDefinition $field, array $details): mixed
                     {
                         $resolve          = $field->resolveFn ?? [Executor::class, 'defaultFieldResolver'];
                         $field->resolveFn = static function (...$args) use ($resolve) {
@@ -1710,6 +1667,8 @@ class DirectivesTest extends TestCase
 
                             return $result;
                         };
+
+                        return null;
                     }
                 },
             ],
@@ -1728,12 +1687,12 @@ class DirectivesTest extends TestCase
                 query {
                     hello
                 }
-            '
+            ',
         );
 
         static::assertEquals(
             ['hello' => 'DLROW OLLEH'],
-            $result->data
+            $result->data,
         );
     }
 }

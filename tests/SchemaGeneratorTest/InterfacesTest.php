@@ -11,18 +11,17 @@ use Throwable;
 
 class InterfacesTest extends TestCase
 {
-    /** @var string */
-    protected $testSchemaWithInterfaces;
+    protected string $testSchemaWithInterfaces;
     /** @var mixed[] */
-    protected $user;
+    protected array $user;
     /** @var mixed[] */
-    protected $queryResolver;
-    /** @var string */
-    protected $query;
+    protected array $queryResolver;
+    protected string $query;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
+
         $this->testSchemaWithInterfaces = '
             interface Node {
                 id: ID!
@@ -63,10 +62,8 @@ class InterfacesTest extends TestCase
         ';
     }
 
-    /**
-     * @see it('throws if there is no interface resolveType resolver')
-     */
-    public function testThrowsIfThereIsNoInterfaceResolveTypeResolver() : void
+    /** @see it('throws if there is no interface resolveType resolver') */
+    public function testThrowsIfThereIsNoInterfaceResolveTypeResolver(): void
     {
         $resolvers = [
             'Query' => $this->queryResolver,
@@ -84,10 +81,8 @@ class InterfacesTest extends TestCase
         }
     }
 
-    /**
-     * @see it('does not throw if there is an interface resolveType resolver')
-     */
-    public function testDoesNotThrowIfThereIsAnInterfaceResolveTypeResolver() : void
+    /** @see it('does not throw if there is an interface resolveType resolver') */
+    public function testDoesNotThrowIfThereIsAnInterfaceResolveTypeResolver(): void
     {
         $resolvers = [
             'Query' => $this->queryResolver,
@@ -108,10 +103,8 @@ class InterfacesTest extends TestCase
         static::assertEmpty($response->errors);
     }
 
-    /**
-     * @see it('does not warn if requireResolversForResolveType is disabled and there are missing resolvers')
-     */
-    public function testDoesNotWarnIfRequireResolversForResolveTypeIsDisabledAndThereAreMissingResolvers() : void
+    /** @see it('does not warn if requireResolversForResolveType is disabled and there are missing resolvers') */
+    public function testDoesNotWarnIfRequireResolversForResolveTypeIsDisabledAndThereAreMissingResolvers(): void
     {
         $resolvers = [
             'Query' => $this->queryResolver,

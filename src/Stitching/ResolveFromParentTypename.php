@@ -8,16 +8,13 @@ use GraphQL\Error\Error;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
+
 use function is_array;
 
 class ResolveFromParentTypename
 {
-    /**
-     * @param mixed $parent
-     *
-     * @throws Error
-     */
-    public static function invoke($parent, Schema $schema) : Type
+    /** @throws Error */
+    public static function invoke(mixed $parent, Schema $schema): Type
     {
         $parentTypename = is_array($parent) ? ($parent['__typename'] ?? null) : null;
         if (! $parentTypename) {

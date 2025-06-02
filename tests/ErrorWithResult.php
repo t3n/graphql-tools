@@ -8,15 +8,8 @@ use GraphQL\Error\Error;
 
 class ErrorWithResult extends Error
 {
-    /** @var mixed */
-    public $result;
-
-    /**
-     * @param mixed $result
-     */
-    public function __construct(string $message, $result)
+    public function __construct(string $message, public mixed $result)
     {
         parent::__construct($message);
-        $this->result = $result;
     }
 }

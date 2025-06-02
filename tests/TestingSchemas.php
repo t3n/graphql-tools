@@ -15,6 +15,7 @@ use GraphQL\Language\AST\ValueNode;
 use GraphQL\Type\Definition\CustomScalarType;
 use GraphQL\Type\Schema;
 use GraphQLTools\GraphQLTools;
+
 use function array_filter;
 use function array_map;
 use function array_slice;
@@ -24,10 +25,7 @@ use function json_encode;
 
 class TestingSchemas
 {
-    /**
-     * @param mixed $value
-     */
-    protected static function coerceString($value) : string
+    protected static function coerceString(mixed $value): string
     {
         if (is_array($value)) {
             throw new Error('String cannot represent an array value [' . $value . ']');
@@ -36,20 +34,12 @@ class TestingSchemas
         return (string) $value;
     }
 
-    /**
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    protected static function identity($value)
+    protected static function identity(mixed $value): mixed
     {
         return $value;
     }
 
-    /**
-     * @return mixed
-     */
-    protected static function parseLiteral(ValueNode $ast)
+    protected static function parseLiteral(ValueNode $ast): mixed
     {
         if ($ast instanceof StringValueNode || $ast instanceof BooleanValueNode) {
             return $ast->value;
@@ -64,6 +54,7 @@ class TestingSchemas
             foreach ($ast->fields as $field) {
                 $value[$field->name->value] = static::parseLiteral($field->value);
             }
+
             return $value;
         }
 
@@ -76,7 +67,7 @@ class TestingSchemas
         return null;
     }
 
-    protected static function graphQLJSON() : CustomScalarType
+    protected static function graphQLJSON(): CustomScalarType
     {
         return new CustomScalarType([
             'name' => 'JSON',
@@ -94,7 +85,7 @@ class TestingSchemas
         ]);
     }
 
-    protected static function dateTime() : CustomScalarType
+    protected static function dateTime(): CustomScalarType
     {
         return new CustomScalarType([
             'name' => 'DateTime',
@@ -116,7 +107,7 @@ class TestingSchemas
     }
 
     /** @var mixed[] */
-    public static $sampleData = [
+    public static array $sampleData = [
         'Product' => [
             'pd1' => [
                 'id' => 'pd1',
@@ -217,7 +208,7 @@ class TestingSchemas
         ],
     ];
 
-    protected static function addressTypeDef() : string
+    protected static function addressTypeDef(): string
     {
         return '
             type Address {
@@ -229,7 +220,7 @@ class TestingSchemas
         ';
     }
 
-    protected static function propertyAddressTypeDef() : string
+    protected static function propertyAddressTypeDef(): string
     {
         return '
             type Property {
@@ -241,7 +232,7 @@ class TestingSchemas
         ';
     }
 
-    protected static function propertyRootTypeDefs() : string
+    protected static function propertyRootTypeDefs(): string
     {
         return '
             type Location {
@@ -296,7 +287,7 @@ class TestingSchemas
         ';
     }
 
-    protected static function propertyAddressTypeDefs() : string
+    protected static function propertyAddressTypeDefs(): string
     {
         $addressTypeDef         = static::addressTypeDef();
         $propertyAddressTypeDef = static::propertyAddressTypeDef();
@@ -312,10 +303,8 @@ class TestingSchemas
         ";
     }
 
-    /**
-     * @return mixed[]
-     */
-    protected static function propertyResolvers() : array
+    /** @return mixed[] */
+    protected static function propertyResolvers(): array
     {
         return [
             'Query' => [
@@ -366,10 +355,10 @@ class TestingSchemas
 
                     return ['someField' => 'Bar'];
                 },
-                'errorTest' => static function () : void {
+                'errorTest' => static function (): void {
                     throw new Error('Sample error!');
                 },
-                'errorTestNonNull' => static function () : void {
+                'errorTestNonNull' => static function (): void {
                     throw new Error('Sample error non-null!');
                 },
                 'defaultInputTest' => static function ($parent, $args) {
@@ -397,14 +386,14 @@ class TestingSchemas
                 },
             ],
             'Property' => [
-                'error' => static function () : void {
+                'error' => static function (): void {
                     throw new Error('Property.error error');
                 },
             ],
         ];
     }
 
-    protected static function customerAddressTypeDef() : string
+    protected static function customerAddressTypeDef(): string
     {
         return '
             type Customer implements Person {
@@ -419,7 +408,7 @@ class TestingSchemas
         ';
     }
 
-    protected static function bookingRootTypeDefs() : string
+    protected static function bookingRootTypeDefs(): string
     {
         return '
             scalar DateTime
@@ -464,7 +453,7 @@ class TestingSchemas
         ';
     }
 
-    protected static function bookingAddressTypeDefs() : string
+    protected static function bookingAddressTypeDefs(): string
     {
         $addressTypeDef         = static::addressTypeDef();
         $customerAddressTypeDef = static::customerAddressTypeDef();
@@ -477,10 +466,8 @@ class TestingSchemas
         ";
     }
 
-    /**
-     * @return mixed[]
-     */
-    protected static function bookingResolvers() : array
+    /** @return mixed[] */
+    protected static function bookingResolvers(): array
     {
         return [
             'Query' => [
@@ -547,10 +534,10 @@ class TestingSchemas
                 'customer' => static function ($parent) {
                     return static::$sampleData['Customer'][$parent['customerId']];
                 },
-                'error' => static function () : void {
+                'error' => static function (): void {
                     throw new Error('Booking.error error');
                 },
-                'errorNonNull' => static function () : void {
+                'errorNonNull' => static function (): void {
                     throw new Error('Booking.errorNoNull error');
                 },
             ],
@@ -570,7 +557,7 @@ class TestingSchemas
                 'vehicle' => static function ($parent) {
                     return static::$sampleData['Vehicle'][$parent['vehicleId']];
                 },
-                'error' => static function () : void {
+                'error' => static function (): void {
                     throw new Error('Customer.error error');
                 },
             ],
@@ -591,7 +578,7 @@ class TestingSchemas
         ];
     }
 
-    public static function propertySchema() : Schema
+    public static function propertySchema(): Schema
     {
         return GraphQLTools::makeExecutableSchema([
             'typeDefs' => static::propertyAddressTypeDefs(),
@@ -599,7 +586,7 @@ class TestingSchemas
         ]);
     }
 
-    public static function bookingSchema() : Schema
+    public static function bookingSchema(): Schema
     {
         return GraphQLTools::makeExecutableSchema([
             'typeDefs' => static::bookingAddressTypeDefs(),

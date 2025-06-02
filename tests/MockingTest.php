@@ -15,6 +15,7 @@ use GraphQLTools\Mock;
 use GraphQLTools\SimpleLogger;
 use PHPUnit\Framework\TestCase;
 use Throwable;
+
 use function count;
 use function explode;
 use function in_array;
@@ -25,14 +26,14 @@ use function strtolower;
 
 class MockingTest extends TestCase
 {
-    /** @var string */
-    protected $shorthand;
+    protected string $shorthand;
     /** @var mixed[] */
-    protected $resolveFunctions;
+    protected array $resolveFunctions;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
+
         $this->shorthand        = '
             scalar MissingMockType
             interface Flying {
@@ -88,22 +89,20 @@ class MockingTest extends TestCase
         ';
         $this->resolveFunctions = [
             'BirdsAndBees' => [
-                '__resolveType' => static function ($data, $context, ResolveInfo $info) : Type {
+                '__resolveType' => static function ($data, $context, ResolveInfo $info): Type {
                     return $info->schema->getType($data['__typename']);
                 },
             ],
             'Flying' => [
-                '__resolveType' => static function ($data, $context, ResolveInfo $info) : Type {
+                '__resolveType' => static function ($data, $context, ResolveInfo $info): Type {
                     return $info->schema->getType($data['__typename']);
                 },
             ],
         ];
     }
 
-    /**
-     * @see it('throws an error if you forget to pass schema')
-     */
-    public function testThrowsAnErrorIfYouForgetToPassSchema() : void
+    /** @see it('throws an error if you forget to pass schema') */
+    public function testThrowsAnErrorIfYouForgetToPassSchema(): void
     {
         try {
             Mock::addMockFunctionsToSchema([]);
@@ -113,10 +112,8 @@ class MockingTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws an error if the property "schema" on the first argument is not of type GraphQLSchema')
-     */
-    public function testThrowsAnErrorIfThePropertySchemaOnThFirstArgumentIsNotOfTypeSchema() : void
+    /** @see it('throws an error if the property "schema" on the first argument is not of type GraphQLSchema') */
+    public function testThrowsAnErrorIfThePropertySchemaOnThFirstArgumentIsNotOfTypeSchema(): void
     {
         try {
             Mock::addMockFunctionsToSchema(['schema' => ['']]);
@@ -126,10 +123,8 @@ class MockingTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws an error if second argument is not a Map')
-     */
-    public function testThrowsAnErrorIfSecondArgumentIsNotAMap() : void
+    /** @see it('throws an error if second argument is not a Map') */
+    public function testThrowsAnErrorIfSecondArgumentIsNotAMap(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         try {
@@ -140,10 +135,8 @@ class MockingTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws an error if mockFunctionMap contains a non-function thingy')
-     */
-    public function testThrowsAnErrorIfMockFunctionMapContainsANonFunctionThingy() : void
+    /** @see it('throws an error if mockFunctionMap contains a non-function thingy') */
+    public function testThrowsAnErrorIfMockFunctionMapContainsANonFunctionThingy(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = ['Int' => 55];
@@ -155,10 +148,8 @@ class MockingTest extends TestCase
         }
     }
 
-    /**
-     * @see it('mocks the default types for you')
-     */
-    public function testMocksTheDefaultTypesForYou() : void
+    /** @see it('mocks the default types for you') */
+    public function testMocksTheDefaultTypesForYou(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [];
@@ -180,10 +171,8 @@ class MockingTest extends TestCase
         static::assertTrue(is_string($res->data['returnID']));
     }
 
-    /**
-     * @see it('lets you use mockServer for convenience')
-     */
-    public function testLetsYouUseMockServerForConvenience() : void
+    /** @see it('lets you use mockServer for convenience') */
+    public function testLetsYouUseMockServerForConvenience(): void
     {
         $testQuery = '
             {
@@ -240,10 +229,8 @@ class MockingTest extends TestCase
         static::assertEquals(54321, $res->data['returnBirdsAndBees'][1]['returnInt']);
     }
 
-    /**
-     * @see it('mockServer is able to preserveResolvers of a prebuilt schema')
-     */
-    public function testMockServerIsAbleToPreserveResolversOfAPrebuiltSchema() : void
+    /** @see it('mockServer is able to preserveResolvers of a prebuilt schema') */
+    public function testMockServerIsAbleToPreserveResolversOfAPrebuiltSchema(): void
     {
         $jsSchema  = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $resolvers = [
@@ -257,7 +244,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         $testQuery = '
@@ -303,10 +290,8 @@ class MockingTest extends TestCase
         static::assertEquals(54321, $res->data['returnBirdsAndBees'][1]['returnInt']);
     }
 
-    /**
-     * @see it('lets you use mockServer with prebuilt schema')
-     */
-    public function testLetsYouUseMockServerWithPrebuiltSchema() : void
+    /** @see it('lets you use mockServer with prebuilt schema') */
+    public function testLetsYouUseMockServerWithPrebuiltSchema(): void
     {
         $jsSchema  = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $testQuery = '
@@ -361,10 +346,8 @@ class MockingTest extends TestCase
         static::assertEquals(54321, $res->data['returnBirdsAndBees'][1]['returnInt']);
     }
 
-    /**
-     * @see it('does not mask resolveType functions if you tell it not to')
-     */
-    public function testDoesNotMaskResolveTypeFunctionsIfYouTellItNotTo() : void
+    /** @see it('does not mask resolveType functions if you tell it not to') */
+    public function testDoesNotMaskResolveTypeFunctionsIfYouTellItNotTo(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $spy      = 0;
@@ -373,6 +356,7 @@ class MockingTest extends TestCase
             'BirdsAndBees' => [
                 '__resolveType' => static function ($data, $context, ResolveInfo $info) use (&$spy) {
                     ++$spy;
+
                     return $info->schema->getType($data['__typename']);
                 },
             ],
@@ -381,7 +365,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         Mock::addMockFunctionsToSchema([
@@ -407,10 +391,8 @@ class MockingTest extends TestCase
         static::assertEquals(2, $spy);
     }
 
-    /**
-     * @see it('can mock Enum')
-     */
-    public function testCanMockEnum() : void
+    /** @see it('can mock Enum') */
+    public function testCanMockEnum(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [];
@@ -420,10 +402,8 @@ class MockingTest extends TestCase
         static::assertTrue(in_array($res->data['returnEnum'], ['A', 'B', 'C']));
     }
 
-    /**
-     * @see it('can mock Unions')
-     */
-    public function testCanMockUnions() : void
+    /** @see it('can mock Unions') */
+    public function testCanMockUnions(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
@@ -484,10 +464,8 @@ class MockingTest extends TestCase
         static::assertTrue($foundBee);
     }
 
-    /**
-     * @see it('can mock Interfaces by default')
-     */
-    public function testCanMockInterfacesByDefault() : void
+    /** @see it('can mock Interfaces by default') */
+    public function testCanMockInterfacesByDefault(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
@@ -555,10 +533,8 @@ class MockingTest extends TestCase
         static::assertTrue($foundB);
     }
 
-    /**
-     * @see it('can support explicit Interface mock')
-     */
-    public function testCanSupportExplicitInterfaceMock() : void
+    /** @see it('can support explicit Interface mock') */
+    public function testCanSupportExplicitInterfaceMock(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
@@ -613,10 +589,8 @@ class MockingTest extends TestCase
         ], $res->data['node']);
     }
 
-    /**
-     * @see it('can support explicit UnionType mock')
-     */
-    public function testCanSupportExplicitUnionTypeMock() : void
+    /** @see it('can support explicit UnionType mock') */
+    public function testCanSupportExplicitUnionTypeMock(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
@@ -672,10 +646,8 @@ class MockingTest extends TestCase
         ], $res->data['node2']);
     }
 
-    /**
-     * @see it('throws an error when __typename is not returned within an explicit interface mock')
-     */
-    public function testThrowsAnErrorWhenTypenameIsNotReturnedWithinAnExplicitInterfaceMock() : void
+    /** @see it('throws an error when __typename is not returned within an explicit interface mock') */
+    public function testThrowsAnErrorWhenTypenameIsNotReturnedWithinAnExplicitInterfaceMock(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         GraphQLTools::addResolveFunctionsToSchema($jsSchema, $this->resolveFunctions);
@@ -693,7 +665,7 @@ class MockingTest extends TestCase
                     'returnInt' => 'A',
                 ];
             },
-            'Flying' => static function ($root, $args) : void {
+            'Flying' => static function ($root, $args): void {
             },
         ];
 
@@ -710,10 +682,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->errors[0]->getPrevious()->getMessage());
     }
 
-    /**
-     * @see it('throws an error in resolve if mock type is not defined')
-     */
-    public function testThrowsAnErrorInResolveIfMockTypeIsNotDefined() : void
+    /** @see it('throws an error in resolve if mock type is not defined') */
+    public function testThrowsAnErrorInResolveIfMockTypeIsNotDefined(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [];
@@ -726,10 +696,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->errors[0]->getPrevious()->getMessage());
     }
 
-    /**
-     * @see it('throws an error in resolve if mock type is not defined and resolver failed')
-     */
-    public function testThrowsAnErrorInResolveIfMockTypeIsNotDefinedAndResolverFailed() : void
+    /** @see it('throws an error in resolve if mock type is not defined and resolver failed') */
+    public function testThrowsAnErrorInResolveIfMockTypeIsNotDefinedAndResolverFailed(): void
     {
         $jsSchema  = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $resolvers = [
@@ -754,7 +722,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         $mockMap = [];
@@ -772,10 +740,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->errors[0]->getPrevious()->getMessage());
     }
 
-    /**
-     * @see it('can preserve scalar resolvers')
-     */
-    public function testCanPreserveScalarResolvers() : void
+    /** @see it('can preserve scalar resolvers') */
+    public function testCanPreserveScalarResolvers(): void
     {
         $jsSchema  = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $resolvers = [
@@ -800,7 +766,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         $mockMap = [];
@@ -821,10 +787,8 @@ class MockingTest extends TestCase
         static::assertEmpty($res->errors);
     }
 
-    /**
-     * @see it('can mock an Int')
-     */
-    public function testCanMockAnInt() : void
+    /** @see it('can mock an Int') */
+    public function testCanMockAnInt(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -840,10 +804,8 @@ class MockingTest extends TestCase
         static::assertEquals(55, $res->data['returnInt']);
     }
 
-    /**
-     * @see it('can mock a Float')
-     */
-    public function testCanMockAFloat() : void
+    /** @see it('can mock a Float') */
+    public function testCanMockAFloat(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -859,10 +821,8 @@ class MockingTest extends TestCase
         static::assertEquals(55.5, $res->data['returnFloat']);
     }
 
-    /**
-     * @see it('can mock a Boolean')
-     */
-    public function testCanMockABoolean() : void
+    /** @see it('can mock a Boolean') */
+    public function testCanMockABoolean(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -878,10 +838,8 @@ class MockingTest extends TestCase
         static::assertTrue($res->data['returnBoolean']);
     }
 
-    /**
-     * @see it('can mock an ID')
-     */
-    public function testCanMockAnID() : void
+    /** @see it('can mock an ID') */
+    public function testCanMockAnID(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -897,10 +855,8 @@ class MockingTest extends TestCase
         static::assertEquals('ea5bdc19', $res->data['returnID']);
     }
 
-    /**
-     * @see it('nullable type is nullable'')
-     */
-    public function testNullableTypeIsNullable() : void
+    /** @see it('nullable type is nullable'') */
+    public function testNullableTypeIsNullable(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -916,10 +872,8 @@ class MockingTest extends TestCase
         static::assertNull($res->data['returnNullableString']);
     }
 
-    /**
-     * @see it('can mock a nonNull type')
-     */
-    public function testCanMockANonNullType() : void
+    /** @see it('can mock a nonNull type') */
+    public function testCanMockANonNullType(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -935,10 +889,8 @@ class MockingTest extends TestCase
         static::assertEquals('nonnull', $res->data['returnNonNullString']);
     }
 
-    /**
-     * @see it('nonNull type is not nullable')
-     */
-    public function testNonNullTypeIsNotNullable() : void
+    /** @see it('nonNull type is not nullable') */
+    public function testNonNullTypeIsNotNullable(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -955,10 +907,8 @@ class MockingTest extends TestCase
         static::assertCount(1, $res->errors);
     }
 
-    /**
-     * @see it('can mock object types')
-     */
-    public function testCanMockObjectTypes() : void
+    /** @see it('can mock object types') */
+    public function testCanMockObjectTypes(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -987,10 +937,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('can mock a list of ints')
-     */
-    public function testCanMockAListOfInts() : void
+    /** @see it('can mock a list of ints') */
+    public function testCanMockAListOfInts(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1010,10 +958,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('can mock a list of lists of objects')
-     */
-    public function testCanMocAListOfObjects() : void
+    /** @see it('can mock a list of lists of objects') */
+    public function testCanMocAListOfObjects(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1045,10 +991,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('does not mask resolve functions if you tell it not to')
-     */
-    public function testDoesNotMaskResolveFunctionsIfYouTellItNotTo() : void
+    /** @see it('does not mask resolve functions if you tell it not to') */
+    public function testDoesNotMaskResolveFunctionsIfYouTellItNotTo(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1086,7 +1030,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         Mock::addMockFunctionsToSchema([
@@ -1108,15 +1052,13 @@ class MockingTest extends TestCase
         ];
 
         GraphQL::promiseToExecute(new ReactPromiseAdapter(), $jsSchema, $testQuery)
-            ->then(static function (ExecutionResult $res) use ($expected) : void {
+            ->then(static function (ExecutionResult $res) use ($expected): void {
                 static::assertEquals($expected, $res->data);
             });
     }
 
-    /**
-     * @see it('lets you mock non-leaf types conveniently')
-     */
-    public function testLetsYouMockNonLeafTypesConveniently() : void
+    /** @see it('lets you mock non-leaf types conveniently') */
+    public function testLetsYouMockNonLeafTypesConveniently(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1152,10 +1094,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you mock and resolve non-leaf types concurrently')
-     */
-    public function testLetsYouMockAndResolveNonLeafTypesConcurrently() : void
+    /** @see it('lets you mock and resolve non-leaf types concurrently') */
+    public function testLetsYouMockAndResolveNonLeafTypesConcurrently(): void
     {
         $jsSchema  = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $resolvers = [
@@ -1173,7 +1113,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         $mockMap = [
@@ -1213,10 +1153,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you mock and resolve non-leaf types concurrently, support promises')
-     */
-    public function testLetsYouMockAndResolveNonLeafTypesConcurrentlySupportPromises() : void
+    /** @see it('lets you mock and resolve non-leaf types concurrently, support promises') */
+    public function testLetsYouMockAndResolveNonLeafTypesConcurrentlySupportPromises(): void
     {
         $jsSchema  = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $resolvers = [
@@ -1231,7 +1169,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         $mockMap = [
@@ -1263,15 +1201,13 @@ class MockingTest extends TestCase
         ];
 
         GraphQL::promiseToExecute(new ReactPromiseAdapter(), $jsSchema, $testQuery)
-            ->then(static function ($res) use ($expected) : void {
+            ->then(static function ($res) use ($expected): void {
                 static::assertEquals($expected, $res->data);
             });
     }
 
-    /**
-     * @see it('let you mock with preserving resolvers, also when using logger')
-     */
-    public function testLetYoMockWithPreservingResolversAlsoWhenUsingLogger() : void
+    /** @see it('let you mock with preserving resolvers, also when using logger') */
+    public function testLetYoMockWithPreservingResolversAlsoWhenUsingLogger(): void
     {
         $resolvers = [
             'RootQuery' => [
@@ -1325,10 +1261,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('let you mock with preserving resolvers, also when using connectors')
-     */
-    public function testLetYoMockWithPreservingResolversAlsoWhenUsingConnectors() : void
+    /** @see it('let you mock with preserving resolvers, also when using connectors') */
+    public function testLetYoMockWithPreservingResolversAlsoWhenUsingConnectors(): void
     {
         $resolvers = [
             'RootQuery' => [
@@ -1348,7 +1282,7 @@ class MockingTest extends TestCase
                 'requireResolversForResolveType' => false,
             ],
             'connectors' => [
-                'testConnector' => static function () : array {
+                'testConnector' => static function (): array {
                     return [];
                 },
             ],
@@ -1386,10 +1320,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('let you mock with preserving resolvers, also when using both connectors and logger')
-     */
-    public function testLetYoMockWithPreservingResolversAlsoWhenUsingBothConnectorsAndLogger() : void
+    /** @see it('let you mock with preserving resolvers, also when using both connectors and logger') */
+    public function testLetYoMockWithPreservingResolversAlsoWhenUsingBothConnectorsAndLogger(): void
     {
         $resolvers = [
             'RootQuery' => [
@@ -1410,7 +1342,7 @@ class MockingTest extends TestCase
             ],
             'logger' => new SimpleLogger(),
             'connectors' => [
-                'testConnector' => static function () : array {
+                'testConnector' => static function (): array {
                     return [];
                 },
             ],
@@ -1448,10 +1380,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('let you resolve null with mocking and preserving resolvers')
-     */
-    public function testLetYouResolveNullWithMockingAndPreservingResolvers() : void
+    /** @see it('let you resolve null with mocking and preserving resolvers') */
+    public function testLetYouResolveNullWithMockingAndPreservingResolvers(): void
     {
         static::markTestSkipped('PHP cannot differentiate between undefined and null');
 
@@ -1467,7 +1397,7 @@ class MockingTest extends TestCase
         GraphQLTools::addResolveFunctionsToSchema(
             $jsSchema,
             $resolvers,
-            ['requireResolversForResolveType' => false]
+            ['requireResolversForResolveType' => false],
         );
 
         $mockMap = [
@@ -1502,10 +1432,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you mock root query fields')
-     */
-    public function testLetsYouMockRootQueryFields() : void
+    /** @see it('lets you mock root query fields') */
+    public function testLetsYouMockRootQueryFields(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1530,10 +1458,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you mock root mutation fields')
-     */
-    public function testLetsYouMockRootMutationFields() : void
+    /** @see it('lets you mock root mutation fields') */
+    public function testLetsYouMockRootMutationFields(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1558,10 +1484,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you mock a list of a certain length')
-     */
-    public function testLetsYouMockAListOfCertainLength() : void
+    /** @see it('lets you mock a list of a certain length') */
+    public function testLetsYouMockAListOfCertainLength(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1589,10 +1513,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you mock a list of a random length')
-     */
-    public function testLetsYouMockAListOfARandomLength() : void
+    /** @see it('lets you mock a list of a random length') */
+    public function testLetsYouMockAListOfARandomLength(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1619,10 +1541,8 @@ class MockingTest extends TestCase
         static::assertEquals(12, $res->data['returnListOfInt'][0]);
     }
 
-    /**
-     * @see it('lets you mock a list of specific variable length')
-     */
-    public function testLetsYouMockAListOfSpecificVariableLength() : void
+    /** @see it('lets you mock a list of specific variable length') */
+    public function testLetsYouMockAListOfSpecificVariableLength(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1650,10 +1570,8 @@ class MockingTest extends TestCase
         static::assertCount(5, $res->data['l5']);
     }
 
-    /**
-     * @see it('lets you provide a function for your MockList')
-     */
-    public function testLetsYouProvideAFunctionForYourMockList() : void
+    /** @see it('lets you provide a function for your MockList') */
+    public function testLetsYouProvideAFunctionForYourMockList(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
 
@@ -1684,10 +1602,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you nest MockList in MockList')
-     */
-    public function testLetsYouNestMockListInMockList() : void
+    /** @see it('lets you nest MockList in MockList') */
+    public function testLetsYouNestMockListInMockList(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1716,10 +1632,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('lets you use arguments in nested MockList')
-     */
-    public function testLetsYouUseArgumentsInNestedMockList() : void
+    /** @see it('lets you use arguments in nested MockList') */
+    public function testLetsYouUseArgumentsInNestedMockList(): void
     {
         $jsSchema = GraphQLTools::buildSchemaFromTypeDefinitions($this->shorthand);
         $mockMap  = [
@@ -1749,10 +1663,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('works for a slightly more elaborate example')
-     */
-    public function testWorksForASlightlyMoreElaborateExample() : void
+    /** @see it('works for a slightly more elaborate example') */
+    public function testWorksForASlightlyMoreElaborateExample(): void
     {
         $short          = '
             type Thread {
@@ -1809,7 +1721,7 @@ class MockingTest extends TestCase
                                 return [
                                     'id' => $ai['num'],
                                 ];
-                            }
+                            },
                         );
                     },
                 ];
@@ -1853,10 +1765,8 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('works for resolvers returning javascript Dates')
-     */
-    public function testWorksForResovlersReturningDates() : void
+    /** @see it('works for resolvers returning javascript Dates') */
+    public function testWorksForResovlersReturningDates(): void
     {
         $typeDefs = '
     	    scalar Date
@@ -1934,17 +1844,13 @@ class MockingTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('allows instanceof checks in __resolveType')
-     */
-    public function testAllowsInstanceofChecksInResolveType() : void
+    /** @see it('allows instanceof checks in __resolveType') */
+    public function testAllowsInstanceofChecksInResolveType(): void
     {
         $account = new class
         {
-            /** @var string */
-            public $id;
-            /** @var string */
-            public $username;
+            public string $id;
+            public string $username;
 
             public function __construct()
             {

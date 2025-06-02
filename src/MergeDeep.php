@@ -14,7 +14,7 @@ class MergeDeep
      *
      * @return mixed[]
      */
-    public static function invoke(array $target, array $source) : array
+    public static function invoke(array $target, array $source): array
     {
         $output = $target;
         foreach ($source as $key => $value) {
@@ -28,6 +28,7 @@ class MergeDeep
                 $output[$key] = $value;
             }
         }
+
         return $output;
     }
 }

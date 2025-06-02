@@ -6,7 +6,7 @@ namespace GraphQLTools\Generate;
 
 use GraphQL\Language\AST\Node;
 use GraphQL\Language\Printer;
-use const PHP_EOL;
+
 use function array_map;
 use function array_merge;
 use function array_reduce;
@@ -17,6 +17,8 @@ use function is_callable;
 use function is_string;
 use function trim;
 
+use const PHP_EOL;
+
 class ConcatenateTypeDefs
 {
     /**
@@ -25,7 +27,7 @@ class ConcatenateTypeDefs
      *
      * @throws SchemaError
      */
-    public static function invoke(array $typeDefinitionsAry, array &$calledFunctionRefs = []) : string
+    public static function invoke(array $typeDefinitionsAry, array &$calledFunctionRefs = []): string
     {
         $resolvedTypeDefinitions = [];
         foreach ($typeDefinitionsAry as $typeDef) {
@@ -42,6 +44,7 @@ class ConcatenateTypeDefs
                 $resolvedTypeDefinitions[] = trim($typeDef);
             } else {
                 $type = gettype($typeDef);
+
                 throw new SchemaError('typeDef array must contain only strings and functions, got ' . $type);
             }
         }
@@ -53,9 +56,9 @@ class ConcatenateTypeDefs
                     static function ($x) {
                         return trim($x);
                     },
-                    $resolvedTypeDefinitions
-                )
-            )
+                    $resolvedTypeDefinitions,
+                ),
+            ),
         );
     }
 
@@ -64,7 +67,7 @@ class ConcatenateTypeDefs
      *
      * @return mixed[]
      */
-    protected static function uniq(array $array) : array
+    protected static function uniq(array $array): array
     {
         return array_reduce(
             $array,
@@ -73,7 +76,7 @@ class ConcatenateTypeDefs
                     ? array_merge($accumulator, [$currentValue])
                     : $accumulator;
             },
-            []
+            [],
         );
     }
 }

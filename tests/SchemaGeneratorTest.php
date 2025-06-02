@@ -28,19 +28,19 @@ use SplObjectStorage;
 use stdClass;
 use Throwable;
 use TypeError;
-use const PHP_EOL;
+
 use function array_map;
 use function is_string;
 use function preg_match;
 use function strlen;
 use function strpos;
 
+use const PHP_EOL;
+
 class SchemaGeneratorTest extends TestCase
 {
-    /**
-     * @see it('throws an error if no schema is provided')
-     */
-    public function testThrowsAnErrorIfNoSchemaIsProvided() : void
+    /** @see it('throws an error if no schema is provided') */
+    public function testThrowsAnErrorIfNoSchemaIsProvided(): void
     {
         try {
             GraphQLTools::makeExecutableSchema([]);
@@ -50,10 +50,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws an error if typeDefinitionNodes are not provided')
-     */
-    public function testThrowsAnErrorIfTypeDefinitionNodesAreNotProvided() : void
+    /** @see it('throws an error if typeDefinitionNodes are not provided') */
+    public function testThrowsAnErrorIfTypeDefinitionNodesAreNotProvided(): void
     {
         try {
             GraphQLTools::makeExecutableSchema([
@@ -66,10 +64,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws an error if no resolveFunctions are provided')
-     */
-    public function testThrowsAnErrorIfNoResolveFunctionsAreProvided() : void
+    /** @see it('throws an error if no resolveFunctions are provided') */
+    public function testThrowsAnErrorIfNoResolveFunctionsAreProvided(): void
     {
         try {
             GraphQLTools::makeExecutableSchema([
@@ -82,10 +78,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws an error if typeDefinitionNodes is neither string nor array nor schema AST')
-     */
-    public function testThrowsAnErrorIfTypeDefinitionNodesIsNeitherStringNorArrayNorSchemaAST() : void
+    /** @see it('throws an error if typeDefinitionNodes is neither string nor array nor schema AST') */
+    public function testThrowsAnErrorIfTypeDefinitionNodesIsNeitherStringNorArrayNorSchemaAST(): void
     {
         try {
             GraphQLTools::makeExecutableSchema([
@@ -95,15 +89,13 @@ class SchemaGeneratorTest extends TestCase
         } catch (Throwable $exception) {
             static::assertEquals(
                 'typeDefs must be a string, array or schema AST, got object',
-                $exception->getMessage()
+                $exception->getMessage(),
             );
         }
     }
 
-    /**
-     * @see it('throws an error if typeDefinitionNode array contains not only functions and strings')
-     */
-    public function testThrowsAnErrorIfTypeDefinitionNodeArrayContainsNotOnlyFunctionsAndStrings() : void
+    /** @see it('throws an error if typeDefinitionNode array contains not only functions and strings') */
+    public function testThrowsAnErrorIfTypeDefinitionNodeArrayContainsNotOnlyFunctionsAndStrings(): void
     {
         try {
             GraphQLTools::makeExecutableSchema([
@@ -114,15 +106,13 @@ class SchemaGeneratorTest extends TestCase
         } catch (Throwable $exception) {
             static::assertEquals(
                 'typeDef array must contain only strings and functions, got integer',
-                $exception->getMessage()
+                $exception->getMessage(),
             );
         }
     }
 
-    /**
-     * @see it('throws an error if resolverValidationOptions is not an object')
-     */
-    public function testThrowsAnErrorIfResolverValidationOptionsIsNotAnObject() : void
+    /** @see it('throws an error if resolverValidationOptions is not an object') */
+    public function testThrowsAnErrorIfResolverValidationOptionsIsNotAnObject(): void
     {
         try {
             GraphQLTools::makeExecutableSchema([
@@ -136,10 +126,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('can generate a schema')
-     */
-    public function testCanGenerateASchema() : void
+    /** @see it('can generate a schema') */
+    public function testCanGenerateASchema(): void
     {
         $shorthand = '
             """
@@ -159,7 +147,7 @@ class SchemaGeneratorTest extends TestCase
 
         $resolve = [
             'RootQuery' => [
-                'species' => static function () : void {
+                'species' => static function (): void {
                     return;
                 },
             ],
@@ -266,10 +254,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($solution, $result->toArray());
     }
 
-    /**
-     * @see it('can generate a schema from an array of types')
-     */
-    public function testCanGenerateASchemaFromAnArrayOfTypes() : void
+    /** @see it('can generate a schema from an array of types') */
+    public function testCanGenerateASchemaFromAnArrayOfTypes(): void
     {
         $typeDefAry = [
             '
@@ -292,10 +278,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('Query', $jsSchema->getQueryType()->name);
     }
 
-    /**
-     * @see it('can generate a schema from a parsed type definition')
-     */
-    public function testCanGenerateASchemaFromAParsedTypeDefinition() : void
+    /** @see it('can generate a schema from a parsed type definition') */
+    public function testCanGenerateASchemaFromAParsedTypeDefinition(): void
     {
         $typeDefSchema = Parser::parse('
             type Query {
@@ -314,10 +298,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('Query', $jsSchema->getQueryType()->name);
     }
 
-    /**
-     * @see it('can generate a schema from an array of parsed and none parsed type definitions')
-     */
-    public function testCanGenerateASchemaFromAnArrayOfParsedAndNoneParsedTypeDefinitions() : void
+    /** @see it('can generate a schema from an array of parsed and none parsed type definitions') */
+    public function testCanGenerateASchemaFromAnArrayOfParsedAndNoneParsedTypeDefinitions(): void
     {
         $typeDefSchema = [
             Parser::parse('
@@ -343,7 +325,7 @@ class SchemaGeneratorTest extends TestCase
     /**
      * it('can generate a schema from an array of types with extensions')
      */
-    public function testCanGenerateASchemaFromAnArrayOfTypesWithExtensions() : void
+    public function testCanGenerateASchemaFromAnArrayOfTypesWithExtensions(): void
     {
         $typeDefAry = [
             '
@@ -370,10 +352,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertArrayHasKey('bar', $jsSchema->getQueryType()->getFields());
     }
 
-    /**
-     * @see it('can concatenateTypeDefs created by a function inside a closure')
-     */
-    public function testCanConcatenateTypeDefsCreatedByAFunctionInsideAClosure() : void
+    /** @see it('can concatenateTypeDefs created by a function inside a closure') */
+    public function testCanConcatenateTypeDefsCreatedByAFunctionInsideAClosure(): void
     {
         $typeA = [
             'typeDefs' => static function () {
@@ -414,16 +394,14 @@ class SchemaGeneratorTest extends TestCase
             $combinedCandD['typeDefs'],
         ]);
 
-        static::assertContains('type TypeA', $result);
-        static::assertContains('type TypeB', $result);
-        static::assertContains('type TypeC', $result);
-        static::assertContains('type TypeD', $result);
+        static::assertStringContainsString('type TypeA', $result);
+        static::assertStringContainsString('type TypeB', $result);
+        static::assertStringContainsString('type TypeC', $result);
+        static::assertStringContainsString('type TypeD', $result);
     }
 
-    /**
-     * @see it('properly deduplicates the array of type DefinitionNodes')
-     */
-    public function testPropertyDeduplicatesTheArrayOfTheDefinitionNodes() : void
+    /** @see it('properly deduplicates the array of type DefinitionNodes') */
+    public function testPropertyDeduplicatesTheArrayOfTheDefinitionNodes(): void
     {
         $typeDefAry = [
             '
@@ -451,10 +429,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('Query', $jsSchema->getQueryType()->name);
     }
 
-    /**
-     * @see it('works with imports, even circular ones')
-     */
-    public function testWorksWithImportsEventCircularOnes() : void
+    /** @see it('works with imports, even circular ones') */
+    public function testWorksWithImportsEventCircularOnes(): void
     {
         $typeDefAry = [
             '
@@ -494,10 +470,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('Query', $jsSchema->getQueryType()->name);
     }
 
-    /**
-     * @see it('can generate a schema with resolve functions')
-     */
-    public function testCanGenerateASchemaWithResolveFunctions() : void
+    /** @see it('can generate a schema with resolve functions') */
+    public function testCanGenerateASchemaWithResolveFunctions(): void
     {
         $shorthand = '
             type BirdSpecies {
@@ -556,10 +530,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($solution, $result->toArray());
     }
 
-    /**
-     * @see it('can generate a schema with extensions that can use resolvers')
-     */
-    public function testCanGenerateASchemaWithExtensionsThatCanUseResolvers() : void
+    /** @see it('can generate a schema with extensions that can use resolvers') */
+    public function testCanGenerateASchemaWithExtensionsThatCanUseResolvers(): void
     {
         $shorthand = '
             type BirdSpecies {
@@ -634,10 +606,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($solution, $result->toArray());
     }
 
-    /**
-     * @see it('supports resolveType for unions')
-     */
-    public function testSupportsResolveTypeUnions() : void
+    /** @see it('supports resolveType for unions') */
+    public function testSupportsResolveTypeUnions(): void
     {
         $shorthand = '
             union Searchable = Person | Location
@@ -662,6 +632,7 @@ class SchemaGeneratorTest extends TestCase
                 'search' => [
                     'resolve' => static function ($root, $args) {
                         $name = $args['name'];
+
                         return [
                             [
                                 'name' => 'Tom ' . $name,
@@ -680,9 +651,11 @@ class SchemaGeneratorTest extends TestCase
                     if (isset($data['age'])) {
                         return $info->schema->getType('Person');
                     }
+
                     if (isset($data['coordinates'])) {
                         return $info->schema->getType('Location');
                     }
+
                     return null;
                 },
             ],
@@ -725,10 +698,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($solution, $result->toArray());
     }
 
-    /**
-     * @see it('can generate a schema with an array of resolvers')
-     */
-    public function testCanGenerateASchemaWithAnArrayOfResolvers() : void
+    /** @see it('can generate a schema with an array of resolvers') */
+    public function testCanGenerateASchemaWithAnArrayOfResolvers(): void
     {
         $shorthand = '
             type BirdSpecies {
@@ -813,10 +784,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($solution, $result->toArray());
     }
 
-    /**
-     * @see it('supports passing a GraphQLScalarType in resolveFunctions')
-     */
-    public function testSupportsPassingAScalarTypeInResolverFunctions() : void
+    /** @see it('supports passing a GraphQLScalarType in resolveFunctions') */
+    public function testSupportsPassingAScalarTypeInResolverFunctions(): void
     {
         $shorthand = '
             scalar JSON
@@ -845,10 +814,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertTrue(strlen($jsSchema->getType('JSON')->description) > 0);
     }
 
-    /**
-     * @see it('retains scalars after walking/recreating the schema')
-     */
-    public function testRetainsScalarsAfterWalkingRecreatingTheSchema() : void
+    /** @see it('retains scalars after walking/recreating the schema') */
+    public function testRetainsScalarsAfterWalkingRecreatingTheSchema(): void
     {
         $shorthand = '
             scalar Test
@@ -882,6 +849,7 @@ class SchemaGeneratorTest extends TestCase
                         case $ast instanceof StringValueNode:
                         case $ast instanceof IntValueNode:
                             return 'scalar:' . $ast->value;
+
                         default:
                             return null;
                     }
@@ -891,6 +859,7 @@ class SchemaGeneratorTest extends TestCase
                 'testIn' => static function ($_, $args) {
                     $input = $args['input'];
                     static::assertStringStartsWith('scalar:', $input);
+
                     return $input;
                 },
                 'test' => static function () {
@@ -920,10 +889,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals(['test' => 'scalar:42', 'testIn' => 'scalar:1'], $result->toArray()['data']);
     }
 
-    /**
-     * @see it('should support custom scalar usage on client-side query execution')
-     */
-    public function testShouldSupportCustomScalarUsageOnClientSideQueryExecution() : void
+    /** @see it('should support custom scalar usage on client-side query execution') */
+    public function testShouldSupportCustomScalarUsageOnClientSideQueryExecution(): void
     {
         $shorthand = '
             scalar CustomScalar
@@ -977,10 +944,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertArrayNotHasKey('errors', $result->toArray());
     }
 
-    /**
-     * @see it('should work with an Odd custom scalar type')
-     */
-    public function testShouldWorkWithAnOddCustomScalarType() : void
+    /** @see it('should work with an Odd custom scalar type') */
+    public function testShouldWorkWithAnOddCustomScalarType(): void
     {
         $oddValue = static function ($value) {
             return $value % 2 === 1 ? $value : null;
@@ -995,6 +960,7 @@ class SchemaGeneratorTest extends TestCase
                 if ($ast instanceof IntValueNode) {
                     return $oddValue($ast->value);
                 }
+
                 return null;
             },
         ]);
@@ -1048,10 +1014,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertArrayNotHasKey('errors', $result->toArray());
     }
 
-    /**
-     * @see it('should work with a Date custom scalar type')
-     */
-    public function testShouldWorkWithADateCustomScalarType() : void
+    /** @see it('should work with a Date custom scalar type') */
+    public function testShouldWorkWithADateCustomScalarType(): void
     {
         $DateType = new CustomScalarType([
             'name' => 'Date',
@@ -1066,6 +1030,7 @@ class SchemaGeneratorTest extends TestCase
                 if ($ast instanceof IntValueNode) {
                     return $ast->value;
                 }
+
                 return null;
             },
         ]);
@@ -1119,10 +1084,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertArrayNotHasKey('errors', $result->toArray());
     }
 
-    /**
-     * @see it('supports passing a GraphQLEnumType in resolveFunctions')
-     */
-    public function testSupportsPassingAGraphQLEnumTypeInResolveFunctions() : void
+    /** @see it('supports passing a GraphQLEnumType in resolveFunctions') */
+    public function testSupportsPassingAGraphQLEnumTypeInResolveFunctions(): void
     {
         $shorthand = '
             enum Color {
@@ -1155,10 +1118,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertInstanceOf(EnumType::class, $jsSchema->getType('NumericEnum'));
     }
 
-    /**
-     * @see it('supports passing the value for a GraphQLEnumType in resolveFunctions')
-     */
-    public function testSupportsPassingTheValueFoAGraphQLEnumTypeInResolveFunctions() : void
+    /** @see it('supports passing the value for a GraphQLEnumType in resolveFunctions') */
+    public function testSupportsPassingTheValueFoAGraphQLEnumTypeInResolveFunctions(): void
     {
         $shorthand = '
             enum Color {
@@ -1216,10 +1177,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertArrayNotHasKey('errors', $result->toArray());
     }
 
-    /**
-     * @see it('supports resolving the value for a GraphQLEnumType in input types')
-     */
-    public function testSupportsResolvingTheValueForAGraphQLEnumTypeInInputTypes() : void
+    /** @see it('supports resolving the value for a GraphQLEnumType in input types') */
+    public function testSupportsResolvingTheValueForAGraphQLEnumTypeInInputTypes(): void
     {
         $shorthand = '
             enum Color {
@@ -1273,10 +1232,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertArrayNotHasKey('errors', $result->toArray());
     }
 
-    /**
-     * @see it('can set description and deprecation reason')
-     */
-    public function testCanSetDescriptionAndDeprecationReason() : void
+    /** @see it('can set description and deprecation reason') */
+    public function testCanSetDescriptionAndDeprecationReason(): void
     {
         $shorthand = '
             type BirdSpecies {
@@ -1348,7 +1305,7 @@ class SchemaGeneratorTest extends TestCase
     /**
      * * @see it('shows a warning if a field has arguments but no resolve func')
      */
-    public function testShowsAWarningIfAFieldHasArgumentsButNoResolveFunc() : void
+    public function testShowsAWarningIfAFieldHasArgumentsButNoResolveFunc(): void
     {
         $short = '
             type Query {
@@ -1373,10 +1330,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('does not throw an error if `resolverValidationOptions.requireResolversForArgs` is false')
-     */
-    public function testDoesNotThrowAnErrorIfResolverValidationOptionsRequireResolversForArgsIsFalse() : void
+    /** @see it('does not throw an error if `resolverValidationOptions.requireResolversForArgs` is false') */
+    public function testDoesNotThrowAnErrorIfResolverValidationOptionsRequireResolversForArgsIsFalse(): void
     {
         $short = '
             type Query{
@@ -1397,10 +1352,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertTrue(true);
     }
 
-    /**
-     * @see it('throws an error if a resolver is not a function')
-     */
-    public function testThrowsAnErrorIfAResolverIsNotAFunction() : void
+    /** @see it('throws an error if a resolver is not a function') */
+    public function testThrowsAnErrorIfAResolverIsNotAFunction(): void
     {
         $short = '
             type Query{
@@ -1423,10 +1376,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('shows a warning if a field is not scalar, but has no resolve func')
-     */
-    public function testShowsAWarningIfAFieldIsNotScalarButHasNoResolveFunc() : void
+    /** @see it('shows a warning if a field is not scalar, but has no resolve func') */
+    public function testShowsAWarningIfAFieldIsNotScalarButHasNoResolveFunc(): void
     {
         $short = '
             type Bird {
@@ -1460,7 +1411,7 @@ class SchemaGeneratorTest extends TestCase
      * @see it('allows non-scalar field to use default resolve func if
      * `resolverValidationOptions.requireResolversForNonScalar` = false')
      */
-    public function testAllowsNonScalarFieldToUseDefaultResolveFuncIfResolverValidationIsOff() : void
+    public function testAllowsNonScalarFieldToUseDefaultResolveFuncIfResolverValidationIsOff(): void
     {
         $short = '
             type Bird {
@@ -1485,10 +1436,8 @@ class SchemaGeneratorTest extends TestCase
         $this->assertTrue(true);
     }
 
-    /**
-     * @see it('throws if resolver defined for non-object/interface type')
-     */
-    public function testThrowsIfResolverDefinedForNonObjectInterfaceType() : void
+    /** @see it('throws if resolver defined for non-object/interface type') */
+    public function testThrowsIfResolverDefinedForNonObjectInterfaceType(): void
     {
         $short = '
             union Searchable = Person | Location
@@ -1526,7 +1475,7 @@ class SchemaGeneratorTest extends TestCase
         } catch (Throwable $exception) {
             static::assertEquals(
                 'Searchable was defined in resolvers, but it\'s not an object',
-                $exception->getMessage()
+                $exception->getMessage(),
             );
         }
 
@@ -1540,10 +1489,8 @@ class SchemaGeneratorTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('throws if resolver defined for non existent type')
-     */
-    public function testThrowsIfResolverDefinedForNonExistentType() : void
+    /** @see it('throws if resolver defined for non existent type') */
+    public function testThrowsIfResolverDefinedForNonExistentType(): void
     {
         $short = '
             type Person {
@@ -1583,10 +1530,8 @@ class SchemaGeneratorTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('throws if resolver value is invalid')
-     */
-    public function testThrowsIfResolverValueIsInvalid() : void
+    /** @see it('throws if resolver value is invalid') */
+    public function testThrowsIfResolverValueIsInvalid(): void
     {
         $short = '
             type Person {
@@ -1613,15 +1558,13 @@ class SchemaGeneratorTest extends TestCase
             static::assertEquals(
                 '"Searchable" defined in resolvers, but has invalid value "NULL".' .
                 ' A resolver\'s value must be of type object or function.',
-                $exception->getMessage()
+                $exception->getMessage(),
             );
         }
     }
 
-    /**
-     * @see it('doesnt let you define resolver field not present in schema')
-     */
-    public function testDoesntLetYouDefineResolverFieldNotPresentInSchema() : void
+    /** @see it('doesnt let you define resolver field not present in schema') */
+    public function testDoesntLetYouDefineResolverFieldNotPresentInSchema(): void
     {
         $short = '
             type Person {
@@ -1661,10 +1604,8 @@ class SchemaGeneratorTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('does not let you define resolver field for enum values not present in schema')
-     */
-    public function testDoesNotLetYouDefineResolverFieldForEnumValuesNotPresentInSchema() : void
+    /** @see it('does not let you define resolver field for enum values not present in schema') */
+    public function testDoesNotLetYouDefineResolverFieldForEnumValuesNotPresentInSchema(): void
     {
         $short = '
             enum Color {
@@ -1698,7 +1639,7 @@ class SchemaGeneratorTest extends TestCase
         } catch (Throwable $exception) {
             static::assertEquals(
                 'Color.NO_RESOLVER was defined in resolvers, but enum is not in schema',
-                $exception->getMessage()
+                $exception->getMessage(),
             );
         }
 
@@ -1709,10 +1650,8 @@ class SchemaGeneratorTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('throws if conflicting validation options are passed')
-     */
-    public function testThrowsIfConflictingValidationOptionsArePassed() : void
+    /** @see it('throws if conflicting validation options are passed') */
+    public function testThrowsIfConflictingValidationOptionsArePassed(): void
     {
         $typeDefs  = '
             type Bird {
@@ -1727,7 +1666,7 @@ class SchemaGeneratorTest extends TestCase
         ';
         $resolvers = [];
 
-        $assertOptionsError = static function ($resolverValidationOptions) use ($typeDefs, $resolvers) : void {
+        $assertOptionsError = static function ($resolverValidationOptions) use ($typeDefs, $resolvers): void {
             try {
                 GraphQLTools::makeExecutableSchema([
                     'typeDefs' => $typeDefs,
@@ -1757,10 +1696,8 @@ class SchemaGeneratorTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('throws for any missing field if `resolverValidationOptions.requireResolversForAllFields` = true')
-     */
-    public function testThrowsForAnyMissingFieldIfResolverValidationOptionsRequireResolversForAllFieldsTrue() : void
+    /** @see it('throws for any missing field if `resolverValidationOptions.requireResolversForAllFields` = true') */
+    public function testThrowsForAnyMissingFieldIfResolverValidationOptionsRequireResolversForAllFieldsTrue(): void
     {
         $typeDefs = '
             type Bird {
@@ -1774,7 +1711,7 @@ class SchemaGeneratorTest extends TestCase
             }
         ';
 
-        $assertFieldError = static function ($errorMatcher, $resolvers) use ($typeDefs) : void {
+        $assertFieldError = static function ($errorMatcher, $resolvers) use ($typeDefs): void {
             try {
                 GraphQLTools::makeExecutableSchema([
                     'typeDefs' => $typeDefs,
@@ -1787,8 +1724,7 @@ class SchemaGeneratorTest extends TestCase
             }
         };
 
-        // different form original test. webonyx/graphql-php does not respect order in typeDefs
-        $assertFieldError('Query.bird', []);
+        $assertFieldError('Bird.id', []);
         $assertFieldError('Query.bird', [
             'Bird' => [
                 'id' => static function ($bird) {
@@ -1809,7 +1745,7 @@ class SchemaGeneratorTest extends TestCase
      * @see it('does not throw if all fields are satisfied
      * when `resolverValidationOptions.requireResolversForAllFields` = true')
      */
-    public function testDoesNotThrowIfAllFieldsAreSatisfied() : void
+    public function testDoesNotThrowIfAllFieldsAreSatisfied(): void
     {
         $typeDefs = '
             type Bird {
@@ -1845,10 +1781,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertTrue(true);
     }
 
-    /**
-     * @see it('throws an error if a resolve field cannot be used')
-     */
-    public function testThrowsAnErrorIfAResolveFieldCannotBeUsed() : void
+    /** @see it('throws an error if a resolve field cannot be used') */
+    public function testThrowsAnErrorIfAResolveFieldCannotBeUsed(): void
     {
         $shorthand = '
             type BirdSpecies {
@@ -1867,6 +1801,7 @@ class SchemaGeneratorTest extends TestCase
             'RootQuery' => [
                 'speciez' => static function ($root, $args) {
                     $name = $args['name'];
+
                     return [
                         [
                             'name' => 'Hello ' . $name . '!',
@@ -1888,10 +1823,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws an error if a resolve type is not in schema')
-     */
-    public function testThrowsAnErrorIfAResolveTypeIsNotInSchema() : void
+    /** @see it('throws an error if a resolve type is not in schema') */
+    public function testThrowsAnErrorIfAResolveTypeIsNotInSchema(): void
     {
         $shorthand = '
             type BirdSpecies {
@@ -1932,10 +1865,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('logs an error if a resolve function fails')
-     */
-    public function testLogsAnErrorIfAResolveFunctionFails() : void
+    /** @see it('logs an error if a resolve function fails') */
+    public function testLogsAnErrorIfAResolveFunctionFails(): void
     {
         $shorthand = '
             type RootQuery {
@@ -1948,7 +1879,7 @@ class SchemaGeneratorTest extends TestCase
 
         $resolve = [
             'RootQuery' => [
-                'species' => static function () : void {
+                'species' => static function (): void {
                     throw new Exception('oops!');
                 },
             ],
@@ -1968,10 +1899,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected, $logger->errors[0]->getMessage());
     }
 
-    /**
-     * @see it('will throw errors on undefined if you tell it to')
-     */
-    public function testWillThrowErrorsOnUndefinedIfYouTellItTo() : void
+    /** @see it('will throw errors on undefined if you tell it to') */
+    public function testWillThrowErrorsOnUndefinedIfYouTellItTo(): void
     {
         static::markTestSkipped('There is no undefined in PHP');
 
@@ -1987,7 +1916,7 @@ class SchemaGeneratorTest extends TestCase
 
         $resolve = [
             'RootQuery' => [
-                'species' => static function () : void {
+                'species' => static function (): void {
                 },
                 'stuff' => static function () {
                     return 'stuff';
@@ -2017,7 +1946,7 @@ class SchemaGeneratorTest extends TestCase
      * @see describe('Schema level resolve function')
      * @see it('actually runs')
      */
-    public function testActuallyRuns() : void
+    public function testActuallyRuns(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2038,10 +1967,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('ROOTstrix', $res->data['species']);
     }
 
-    /**
-     * @see it('can wrap fields that do not have a resolver defined')
-     */
-    public function testCanWrapFieldsThatDoNotHaveAResolverDefined() : void
+    /** @see it('can wrap fields that do not have a resolver defined') */
+    public function testCanWrapFieldsThatDoNotHaveAResolverDefined(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2061,10 +1988,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('stuff', $res->data['stuff']);
     }
 
-    /**
-     * @see it('runs only once per query')
-     */
-    public function testRunsOnlyOncePerQuery() : void
+    /** @see it('runs only once per query') */
+    public function testRunsOnlyOncePerQuery(): void
     {
         $simpleResolvers = [
             'RootQuery' => [
@@ -2079,6 +2004,7 @@ class SchemaGeneratorTest extends TestCase
                 },
                 'species' => static function ($root, $args) {
                     $name = $args['name'];
+
                     return $root['species'] . $name;
                 },
             ],
@@ -2093,10 +2019,13 @@ class SchemaGeneratorTest extends TestCase
         $rootResolver = static function () use (&$count) {
             if ($count === 0) {
                 $count += 1;
+
                 return ['stuff' => 'stuff', 'species' => 'some '];
             }
+
             if ($count === 1) {
                 $count += 1;
+
                 return ['stuff' => 'stuff2', 'species' => 'species2 '];
             }
 
@@ -2124,17 +2053,15 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected2, $res2->data);
     }
 
-    /**
-     * @see it('can attach things to context')
-     */
-    public function testCanAttachThingsToContext() : void
+    /** @see it('can attach things to context') */
+    public function testCanAttachThingsToContext(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
             'resolvers' => TestHelper::getTestResolvers(),
         ]);
 
-        $rootResolver = static function ($o, $a, &$ctx) : void {
+        $rootResolver = static function ($o, $a, &$ctx): void {
             $ctx->usecontext = 'ABC';
         };
 
@@ -2148,10 +2075,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('can attach with existing static connectors')
-     */
-    public function testCanAttachWithExistingStaticConnectors() : void
+    /** @see it('can attach with existing static connectors') */
+    public function testCanAttachWithExistingStaticConnectors(): void
     {
         $resolvers = [
             'RootQuery' => [
@@ -2189,10 +2114,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('actually attaches the connectors')
-     */
-    public static function testActuallyAttachesTheConnectors() : void
+    /** @see it('actually attaches the connectors') */
+    public static function testActuallyAttachesTheConnectors(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2210,10 +2133,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('actually passes the context to the connector constructor')
-     */
-    public function testActuallyPassesTheContextToTheConnectorConstructor() : void
+    /** @see it('actually passes the context to the connector constructor') */
+    public function testActuallyPassesTheContextToTheConnectorConstructor(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2231,10 +2152,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('throws error if trying to attach connectors twice')
-     */
-    public function testThrowsErrorIfTryingToAttachConnectorsTwice() : void
+    /** @see it('throws error if trying to attach connectors twice') */
+    public function testThrowsErrorIfTryingToAttachConnectorsTwice(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2250,10 +2169,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('throws error during execution if context is not an object')
-     */
-    public function testThrowsErrorDuringExecutionIfContextIsNotAnObject() : void
+    /** @see it('throws error during execution if context is not an object') */
+    public function testThrowsErrorDuringExecutionIfContextIsNotAnObject(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2267,10 +2184,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('Cannot attach connector because context is not an object: string', $res->errors[0]->getMessage());
     }
 
-    /**
-     * @see it('throws error if trying to attach non-functional connectors')
-     */
-    public function testThrowsErrorIfTryingToAttachNonFunctionalConnectors() : void
+    /** @see it('throws error if trying to attach non-functional connectors') */
+    public function testThrowsErrorIfTryingToAttachNonFunctionalConnectors(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2287,10 +2202,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals('Connector must be a function or an class', $res->errors[0]->getMessage());
     }
 
-    /**
-     * @see it('does not interfere with schema level resolve function')
-     */
-    public function testDoesNotInterfereWithSchemaLevelResolveFunction() : void
+    /** @see it('does not interfere with schema level resolve function') */
+    public function testDoesNotInterfereWithSchemaLevelResolveFunction(): void
     {
         $jsSchema     = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2324,7 +2237,7 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    public function testThrowsErrorIfConnectorsArgumentIsAnNumericArray() : void
+    public function testThrowsErrorIfConnectorsArgumentIsAnNumericArray(): void
     {
         $jsSchema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2339,10 +2252,8 @@ class SchemaGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @see it('outputs a working GraphQL schema')
-     */
-    public function testOutputsAWorkingGraphQLSchema() : void
+    /** @see it('outputs a working GraphQL schema') */
+    public function testOutputsAWorkingGraphQLSchema(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => TestHelper::getTestSchema(),
@@ -2368,10 +2279,8 @@ class SchemaGeneratorTest extends TestCase
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('can chain two resolvers')
-     */
-    public function testCanChainTwoResolvers() : void
+    /** @see it('can chain two resolvers') */
+    public function testCanChainTwoResolvers(): void
     {
         $r1 = static function ($root) {
             return $root + 1;
@@ -2385,10 +2294,8 @@ class SchemaGeneratorTest extends TestCase
         self::assertEquals(3, $rChained(0, ['addend' => 2], null, null));
     }
 
-    /**
-     * @see it('uses default resolver when a resolver is undefined')
-     */
-    public function testUsesDefaultResolverWhenAResolverIsUndefined() : void
+    /** @see it('uses default resolver when a resolver is undefined') */
+    public function testUsesDefaultResolverWhenAResolverIsUndefined(): void
     {
         $r1 = static function ($root, $args) {
             return [
@@ -2406,7 +2313,7 @@ class SchemaGeneratorTest extends TestCase
 
         static::assertEquals(
             'tony',
-            $rChained(0, ['name' => 'tony'], null, ResolveInfoHelper::createResolveInfo(['fieldName' => 'person']))
+            $rChained(0, ['name' => 'tony'], null, ResolveInfoHelper::createResolveInfo(['fieldName' => 'person'])),
         );
     }
 }

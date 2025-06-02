@@ -13,6 +13,7 @@ use GraphQL\Language\AST\FragmentDefinitionNode;
 use GraphQL\Language\AST\ListTypeNode;
 use GraphQL\Language\AST\NamedTypeNode;
 use GraphQL\Language\AST\NameNode;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\NonNullTypeNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionNode;
@@ -22,9 +23,9 @@ use GraphQL\Language\AST\VariableDefinitionNode;
 use GraphQL\Language\AST\VariableNode;
 use GraphQL\Type\Definition\InputType;
 use GraphQL\Type\Definition\NonNull;
-use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
 use GraphQLTools\Utils;
+
 use function array_filter;
 use function array_keys;
 use function array_map;
@@ -35,18 +36,9 @@ use function sprintf;
 
 class AddArgumentsAsVariables implements Transform
 {
-    /** @var Schema */
-    private $schema;
-    /** @var mixed[] */
-    private $args;
-
-    /**
-     * @param mixed[] $args
-     */
-    public function __construct(Schema $schema, array $args)
+    /** @param mixed[] $args */
+    public function __construct(private Schema $schema, private array $args)
     {
-        $this->schema = $schema;
-        $this->args   = $args;
     }
 
     /**
@@ -54,12 +46,12 @@ class AddArgumentsAsVariables implements Transform
      *
      * @return mixed[]
      */
-    public function transformRequest(array $originalRequest) : array
+    public function transformRequest(array $originalRequest): array
     {
         ['document' => $document, 'newVariables' => $newVariables] = static::addVariablesToRootField(
             $this->schema,
             $originalRequest['document'],
-            $this->args
+            $this->args,
         );
 
         $variables = array_merge($originalRequest['variables'], $newVariables);
@@ -75,12 +67,12 @@ class AddArgumentsAsVariables implements Transform
      *
      * @return mixed[]
      */
-    private static function addVariablesToRootField(Schema $targetSchema, DocumentNode $document, array $args) : array
+    private static function addVariablesToRootField(Schema $targetSchema, DocumentNode $document, array $args): array
     {
-        $operations = array_filter($document->definitions, static function (DefinitionNode $def) {
+        $operations = array_filter(Utils::toArray($document->definitions), static function (DefinitionNode $def) {
             return $def instanceof OperationDefinitionNode;
         });
-        $fragments  = array_filter($document->definitions, static function (DefinitionNode $def) {
+        $fragments  = array_filter(Utils::toArray($document->definitions), static function (DefinitionNode $def) {
             return $def instanceof FragmentDefinitionNode;
         });
 
@@ -97,18 +89,16 @@ class AddArgumentsAsVariables implements Transform
 
                 $generateVariableName = static function (string $argName) use (
                     &$variableCounter,
-                    $existingVariables
-                ) : string {
-                    $varName = null;
+                    $existingVariables,
+                ): string {
                     do {
                         $varName = sprintf('_v%s_%s', $variableCounter, $argName);
                         $variableCounter++;
                     } while (in_array($varName, $existingVariables));
+
                     return $varName;
                 };
 
-                /** @var ObjectType $type */
-                $type = null;
                 if ($operation->operation === 'subscription') {
                     $type = $targetSchema->getSubscriptionType();
                 } elseif ($operation->operation === 'mutation') {
@@ -126,6 +116,7 @@ class AddArgumentsAsVariables implements Transform
                         foreach ($selection->arguments as $argument) {
                             $newArgs[$argument->name->value] = $argument;
                         }
+
                         $name  = $selection->name->value;
                         $field = $type->getField($name);
                         foreach ($field->args as $argument) {
@@ -153,7 +144,7 @@ class AddArgumentsAsVariables implements Transform
                         }
 
                         $selection            = clone$selection;
-                        $selection->arguments = array_values($newArgs);
+                        $selection->arguments = new NodeList(array_values($newArgs));
                         $newSelectionSet[]    = $selection;
                     } else {
                         $newSelectionSet[] = $selection;
@@ -161,15 +152,15 @@ class AddArgumentsAsVariables implements Transform
                 }
 
                 $operation                      = clone$operation;
-                $operation->variableDefinitions = array_merge(
+                $operation->variableDefinitions = new NodeList(array_merge(
                     Utils::toArray($operation->variableDefinitions),
-                    array_values($variables)
-                );
-                $operation->selectionSet        = new SelectionSetNode(['selections' => $newSelectionSet]);
+                    array_values($variables),
+                ));
+                $operation->selectionSet        = new SelectionSetNode(['selections' => new NodeList($newSelectionSet)]);
 
                 return $operation;
             },
-            $operations
+            $operations,
         );
 
         $newVariables = [];
@@ -178,7 +169,7 @@ class AddArgumentsAsVariables implements Transform
         }
 
         $document              = clone$document;
-        $document->definitions = array_merge($newOperations, $fragments);
+        $document->definitions = new NodeList(array_merge($newOperations, $fragments));
 
         return [
             'document' => $document,
@@ -186,7 +177,7 @@ class AddArgumentsAsVariables implements Transform
         ];
     }
 
-    private static function typeToAst(InputType $type) : TypeNode
+    private static function typeToAst(InputType $type): TypeNode
     {
         if ($type instanceof NonNull) {
             $innerType = static::typeToAst($type->getWrappedType());
@@ -195,9 +186,11 @@ class AddArgumentsAsVariables implements Transform
             }
 
             throw new Error('Incorrect inner non-null type');
-        } elseif ($type instanceof ListTypeNode) {
+        }
+
+        if ($type instanceof ListTypeNode) {
             return new ListTypeNode([
-                'type' => static::typeToAst($type->ofType),
+                'type' => static::typeToAst($type->type),
             ]);
         }
 

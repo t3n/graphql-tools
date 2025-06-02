@@ -16,9 +16,10 @@ class FilterTypes implements Transform
         $this->filter = $filter;
     }
 
-    public function transformSchema(Schema $schema) : Schema
+    public function transformSchema(Schema $schema): Schema
     {
         $filter = $this->filter;
+
         return VisitSchema::invoke($schema, [
             VisitSchemaKind::TYPE => static function ($type) use ($filter) {
                 if ($filter($type)) {

@@ -16,10 +16,8 @@ use GraphQLTools\Transforms\TransformSchema;
 
 class GraphQLTools
 {
-    /**
-     * @param mixed[] $options
-     */
-    public static function makeExecutableSchema(array $options) : Schema
+    /** @param mixed[] $options */
+    public static function makeExecutableSchema(array $options): Schema
     {
         return MakeExecutableSchema::invoke($options);
     }
@@ -30,40 +28,32 @@ class GraphQLTools
      * @param mixed[]|null   $legacyInputValidationOptions
      */
     public static function addResolveFunctionsToSchema(
-        $options,
-        $legacyInputResolvers = null,
-        ?array $legacyInputValidationOptions = null
-    ) : Schema {
+        Schema|array $options,
+        array|null $legacyInputResolvers = null,
+        array|null $legacyInputValidationOptions = null,
+    ): Schema {
         return AddResolveFunctionsToSchema::invoke($options, $legacyInputResolvers, $legacyInputValidationOptions);
     }
 
-    public static function addSchemaLevelResolveFunction(Schema $schema, callable $resolveFn) : void
+    public static function addSchemaLevelResolveFunction(Schema $schema, callable $resolveFn): void
     {
         AddSchemaLevelResolveFunction::invoke($schema, $resolveFn);
     }
 
-    /**
-     * @param mixed[] $options
-     *
-     * @return mixed
-     */
-    public static function delegateToSchema(array $options)
+    /** @param mixed[] $options */
+    public static function delegateToSchema(array $options): mixed
     {
         return DelegateToSchema::invoke($options);
     }
 
-    /**
-     * @param mixed[] $options
-     */
-    public static function mergeSchemas(array $options) : Schema
+    /** @param mixed[] $options */
+    public static function mergeSchemas(array $options): Schema
     {
         return MergeSchemas::invoke($options);
     }
 
-    /**
-     * @param Transform[] $transforms
-     */
-    public static function transformSchema(Schema $targetSchema, array $transforms) : Schema
+    /** @param Transform[] $transforms */
+    public static function transformSchema(Schema $targetSchema, array $transforms): Schema
     {
         return TransformSchema::invoke($targetSchema, $transforms);
     }
@@ -72,7 +62,7 @@ class GraphQLTools
      * @param string|string[]|DocumentNode $typeDefinitions
      * @param mixed[]|null                 $parseOptions
      */
-    public static function buildSchemaFromTypeDefinitions($typeDefinitions, ?array $parseOptions = null) : Schema
+    public static function buildSchemaFromTypeDefinitions(string|array|DocumentNode $typeDefinitions, array|null $parseOptions = null): Schema
     {
         return BuildSchemaFromTypeDefinitions::invoke($typeDefinitions, $parseOptions);
     }

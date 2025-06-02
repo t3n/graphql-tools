@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GraphQLTools\Stitching;
 
+use ArrayObject;
 use Exception;
 use GraphQL\GraphQL;
 use GraphQL\Language\AST\DocumentNode;
@@ -12,9 +13,7 @@ use GraphQL\Language\AST\FragmentDefinitionNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\OperationDefinitionNode;
-use GraphQL\Language\AST\SelectionNode;
 use GraphQL\Language\AST\SelectionSetNode;
-use GraphQL\Language\AST\VariableDefinitionNode;
 use GraphQL\Type\Definition\EnumType;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Validator\DocumentValidator;
@@ -27,21 +26,19 @@ use GraphQLTools\Transforms\FilterToSchema;
 use GraphQLTools\Transforms\ReplaceFieldWithFragment;
 use GraphQLTools\Transforms\Transforms;
 use GraphQLTools\Utils;
+
 use function array_merge;
 use function array_values;
+use function assert;
 use function count;
 
 class DelegateToSchema
 {
-    /**
-     * @param mixed[] $options
-     *
-     * @return mixed
-     */
-    public static function invoke(array $options)
+    /** @param mixed[] $options */
+    public static function invoke(array $options): mixed
     {
-        /** @var ResolveInfo $info */
-        $info      = $options['info'];
+        $info = $options['info'];
+        assert($info instanceof ResolveInfo);
         $args      = $options['args'] ?? [];
         $operation = $options['operation'] ?? $info->operation->operation;
 
@@ -51,7 +48,7 @@ class DelegateToSchema
             $info->fieldNodes,
             array_values($info->fragments),
             $info->operation->variableDefinitions,
-            $info->operation->name
+            $info->operation->name,
         );
 
         $rawRequest = [
@@ -61,7 +58,7 @@ class DelegateToSchema
 
         $transforms = array_merge(
             $options['transforms'] ?? [],
-            [new ExpandAbstractTypes($info->schema, $options['schema'])]
+            [new ExpandAbstractTypes($info->schema, $options['schema'])],
         );
 
         if (isset($info->mergeInfo) && count($info->mergeInfo->fragments) > 0) {
@@ -75,13 +72,13 @@ class DelegateToSchema
                 new FilterToSchema($options['schema']),
                 new AddTypenameToAbstract($options['schema']),
                 new CheckResultAndHandleErrors($info, $options['fieldName']),
-            ]
+            ],
         );
 
         if ($info->returnType instanceof EnumType) {
             $transforms = array_merge(
                 $transforms,
-                [new ConvertEnumResponse($info->returnType)]
+                [new ConvertEnumResponse($info->returnType)],
             );
         }
 
@@ -101,9 +98,9 @@ class DelegateToSchema
                     $processedRequest['document'],
                     $info->rootValue,
                     $options['context'] ?? null,
-                    $processedRequest['variables']
+                    $processedRequest['variables'],
                 ),
-                $transforms
+                $transforms,
             );
         }
 
@@ -115,43 +112,39 @@ class DelegateToSchema
         */
     }
 
-    /**
-     * @param SelectionNode[]|NodeList          $originalSelections
-     * @param FragmentDefinitionNode[]          $fragments
-     * @param VariableDefinitionNode[]|NodeList $variables
-     */
+    /** @param FragmentDefinitionNode[] $fragments */
     private static function createDocument(
         string $targetField,
         string $targetOperation,
-        $originalSelections,
+        ArrayObject $originalSelections,
         array $fragments,
-        $variables,
-        ?NameNode $operationName
-    ) : DocumentNode {
+        NodeList $variables,
+        NameNode|null $operationName,
+    ): DocumentNode {
         $selections = [];
         $args       = [];
 
-        /** @var FieldNode $field */
         foreach ($originalSelections as $field) {
-            $fieldSelection = $field->selectionSet ? $field->selectionSet->selections : [];
+            assert($field instanceof FieldNode);
+            $fieldSelection = $field->selectionSet ? $field->selectionSet->selections : new NodeList([]);
             $selections     = array_merge($selections, Utils::toArray($fieldSelection));
-            $args           = array_merge($args, $field->arguments ? Utils::toArray($field->arguments) : []);
+            $args           = array_merge($args, Utils::toArray($field->arguments));
         }
 
         $selectionSet = null;
         if (count($selections) > 0) {
-            $selectionSet = new SelectionSetNode(['selections' => $selections]);
+            $selectionSet = new SelectionSetNode(['selections' => new NodeList($selections)]);
         }
 
         $rootField = new FieldNode([
             'alias' => null,
-            'arguments' => $args,
+            'arguments' => new NodeList($args),
             'selectionSet' => $selectionSet,
             'name' => new NameNode(['value' => $targetField]),
         ]);
 
         $rootSelectionSet = new SelectionSetNode([
-            'selections' => [$rootField],
+            'selections' => new NodeList([$rootField]),
         ]);
 
         $operationDefinition = new OperationDefinitionNode([
@@ -162,7 +155,7 @@ class DelegateToSchema
         ]);
 
         return new DocumentNode([
-            'definitions' => array_merge([$operationDefinition], $fragments),
+            'definitions' => new NodeList(array_merge([$operationDefinition], $fragments)),
         ]);
     }
 }

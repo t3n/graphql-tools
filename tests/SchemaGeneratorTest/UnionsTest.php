@@ -11,20 +11,19 @@ use Throwable;
 
 class UnionsTest extends TestCase
 {
-    /** @var string */
-    protected $testSchemaWithUnions;
+    protected string $testSchemaWithUnions;
     /** @var mixed[] */
-    protected $post;
+    protected array $post;
     /** @var mixed[] */
-    protected $page;
+    protected array $page;
     /** @var mixed[] */
-    protected $queryResolver;
-    /** @var string */
-    protected $query;
+    protected array $queryResolver;
+    protected string $query;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
+
         $this->testSchemaWithUnions = '
             type Post {
                 title: String!
@@ -68,10 +67,8 @@ class UnionsTest extends TestCase
         ';
     }
 
-    /**
-     * @see it('throws if there is no union resolveType resolver')
-     */
-    public function testThrowsIfThereIsNoUnionResolveTypeResolver() : void
+    /** @see it('throws if there is no union resolveType resolver') */
+    public function testThrowsIfThereIsNoUnionResolveTypeResolver(): void
     {
         $resolvers = [
             'Query' => $this->queryResolver,
@@ -89,10 +86,8 @@ class UnionsTest extends TestCase
         }
     }
 
-    /**
-     * @see it('does not throw if there is a resolveType resolver')
-     */
-    public function testDoesNotThrowIfThereIsAResolveTypeResolver() : void
+    /** @see it('does not throw if there is a resolveType resolver') */
+    public function testDoesNotThrowIfThereIsAResolveTypeResolver(): void
     {
         $resolvers = [
             'Query' => $this->queryResolver,
@@ -113,10 +108,8 @@ class UnionsTest extends TestCase
         static::assertEmpty($response->errors);
     }
 
-    /**
-     * @see it('does not warn if requireResolversForResolveType is disabled')
-     */
-    public function testDoesNotWarnIfRequireResolversForResolveTypeIsDisabled() : void
+    /** @see it('does not warn if requireResolversForResolveType is disabled') */
+    public function testDoesNotWarnIfRequireResolversForResolveTypeIsDisabled(): void
     {
         $resolvers = [
             'Query' => $this->queryResolver,
