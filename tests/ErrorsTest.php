@@ -8,14 +8,13 @@ use GraphQL\Error\Error;
 use GraphQL\Executor\ExecutionResult;
 use GraphQLTools\Stitching\Errors;
 use PHPUnit\Framework\TestCase;
+
 use function count;
 
 class ErrorsTest extends TestCase
 {
-    /**
-     * @see it('should return OWN error kind if path is not defined')
-     */
-    public function testShouldReturnOWNErrorKindIfPathIsNotDefined() : void
+    /** @see it('should return OWN error kind if path is not defined') */
+    public function testShouldReturnOWNErrorKindIfPathIsNotDefined(): void
     {
         $mockErrors = [
             'responseKey' => '',
@@ -29,18 +28,16 @@ class ErrorsTest extends TestCase
             [
                 'kind' => 'OWN',
                 'error' => $mockErrors[Errors::ERROR_SYMBOL][0],
-            ]
+            ],
         );
     }
 
-    /**
-     * @see it('persists single error with a result')
-     */
-    public function testPersistsSingleErrorWithAResult() : void
+    /** @see it('persists single error with a result') */
+    public function testPersistsSingleErrorWithAResult(): void
     {
         $result = new ExecutionResult(
             null,
-            [new ErrorWithResult('Test error', 'result')]
+            [new ErrorWithResult('Test error', 'result')],
         );
 
         try {
@@ -51,14 +48,12 @@ class ErrorsTest extends TestCase
         }
     }
 
-    /**
-     * @see it('persists single error with extensions')
-     */
-    public function testPersistsSingleErrorWithExtensions() : void
+    /** @see it('persists single error with extensions') */
+    public function testPersistsSingleErrorWithExtensions(): void
     {
         $result = new ExecutionResult(
             null,
-            [new ErrorWithExtensions('Test error', 'UNAUTHENTICATED')]
+            [new ErrorWithExtensions('Test error', 'UNAUTHENTICATED')],
         );
 
         try {
@@ -70,14 +65,12 @@ class ErrorsTest extends TestCase
         }
     }
 
-    /**
-     * @see it('persists original errors without a result')
-     */
-    public function testPersistsOriginalErrorsWithoutAResult() : void
+    /** @see it('persists original errors without a result') */
+    public function testPersistsOriginalErrorsWithoutAResult(): void
     {
         $result = new ExecutionResult(
             null,
-            [new Error('Test error')]
+            [new Error('Test error')],
         );
 
         try {
@@ -94,17 +87,15 @@ class ErrorsTest extends TestCase
         }
     }
 
-    /**
-     * @see it('combines errors and persists the original errors')
-     */
-    public function testCombinesErrorsAndPersistsTheOriginalErrors() : void
+    /** @see it('combines errors and persists the original errors') */
+    public function testCombinesErrorsAndPersistsTheOriginalErrors(): void
     {
         $result = new ExecutionResult(
             null,
             [
                 new Error('Error1'),
                 new Error('Error2'),
-            ]
+            ],
         );
 
         try {

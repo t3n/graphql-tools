@@ -6,7 +6,7 @@ namespace GraphQLTools\Tests\SchemaGeneratorTest;
 
 class TestHelper
 {
-    public static function getTestSchema() : string
+    public static function getTestSchema(): string
     {
         return '
             type RootQuery {
@@ -22,10 +22,8 @@ class TestHelper
         ';
     }
 
-    /**
-     * @return mixed[]
-     */
-    public static function getTestResolvers() : array
+    /** @return mixed[] */
+    public static function getTestResolvers(): array
     {
         return [
             '__schema' => static function () {
@@ -46,46 +44,44 @@ class TestHelper
                 },
                 'species' => static function ($root, $args) {
                     $name = $args['name'];
+
                     return $root['species'] . $name;
                 },
             ],
         ];
     }
 
-    public static function getTestConnector() : object
+    public static function getTestConnector(): object
     {
         return new class
         {
-            public function get() : string
+            public function get(): string
             {
                 return 'works';
             }
         };
     }
 
-    public static function getContextConnector(?object $ctx) : object
+    public static function getContextConnector(object|null $ctx): object
     {
         return new class ($ctx)
         {
-            /** @var string|null */
-            private $str;
+            private string|null $str = null;
 
-            public function __construct(?object $ctx)
+            public function __construct(object|null $ctx)
             {
                 $this->str = $ctx->str ?? null;
             }
 
-            public function get() : ?string
+            public function get(): string|null
             {
                 return $this->str;
             }
         };
     }
 
-    /**
-     * @return callable[]
-     */
-    public static function getTestConnectors() : array
+    /** @return callable[] */
+    public static function getTestConnectors(): array
     {
         return [
             'TestConnector' => [static::class, 'getTestConnector'],

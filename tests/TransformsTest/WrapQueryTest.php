@@ -9,11 +9,14 @@ use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\FragmentSpreadNode;
 use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\NameNode;
+use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Type\Schema;
 use GraphQLTools\GraphQLTools;
 use GraphQLTools\Transforms\WrapQuery;
+use GraphQLTools\Utils;
 use PHPUnit\Framework\TestCase;
+
 use function array_map;
 use function strtoupper;
 use function substr;
@@ -21,15 +24,14 @@ use function substr;
 class WrapQueryTest extends TestCase
 {
     /** @var mixed[] */
-    protected $data;
-    /** @var Schema */
-    protected $subSchema;
-    /** @var Schema */
-    protected $schema;
+    protected array $data;
+    protected Schema $subSchema;
+    protected Schema $schema;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
+
         $this->data      = [
             'u1' => [
                 'id' => 'user1',
@@ -52,6 +54,7 @@ class WrapQueryTest extends TestCase
                 'Query' => [
                     'userById' => function ($parent, $args) {
                         $id = $args['id'];
+
                         return $this->data[$id];
                     },
                 ],
@@ -76,6 +79,7 @@ class WrapQueryTest extends TestCase
                 'Query' => [
                     'addressByUser' => function ($parent, $args, $context, $info) {
                         $id = $args['id'];
+
                         return GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'query',
@@ -90,12 +94,14 @@ class WrapQueryTest extends TestCase
                                     ['userById'],
                                     static function ($subtree) {
                                         return new SelectionSetNode([
-                                            'selections' => array_map(
+                                            'selections' => new NodeList(array_map(
                                                 static function ($selection) {
                                                     // just append fragments, not interesting for this
                                                     // test
-                                                    if ($selection instanceof InlineFragmentNode
-                                                        || $selection instanceof FragmentSpreadNode) {
+                                                    if (
+                                                        $selection instanceof InlineFragmentNode
+                                                        || $selection instanceof FragmentSpreadNode
+                                                    ) {
                                                         return $selection;
                                                     }
 
@@ -111,8 +117,8 @@ class WrapQueryTest extends TestCase
                                                         ]),
                                                     ]);
                                                 },
-                                                $subtree->selections
-                                            ),
+                                                Utils::toArray($subtree->selections),
+                                            )),
                                         ]);
                                     },
                                     static function ($result) {
@@ -120,7 +126,7 @@ class WrapQueryTest extends TestCase
                                             'streetAddress' => $result['addressStreetAddress'],
                                             'zip' => $result['addressZip'],
                                         ];
-                                    }
+                                    },
                                 ),
                             ],
                         ]);
@@ -130,10 +136,8 @@ class WrapQueryTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('wrapping delegation, returning selectionSet')
-     */
-    public function testWrappingDelegationReturningSelectionSet() : void
+    /** @see it('wrapping delegation, returning selectionSet') */
+    public function testWrappingDelegationReturningSelectionSet(): void
     {
         $result = GraphQL::executeQuery(
             $this->schema,
@@ -144,7 +148,7 @@ class WrapQueryTest extends TestCase
                     zip
                 }
             }
-        '
+        ',
         );
 
         static::assertEquals(
@@ -156,7 +160,7 @@ class WrapQueryTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 }

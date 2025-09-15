@@ -11,20 +11,18 @@ use GraphQLTools\Tests\TestingSchemas;
 use GraphQLTools\Transforms\RenameTypes;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @see describe('rename type')
- */
+/** @see describe('rename type') */
 class RenameTypeTest extends TestCase
 {
-    /** @var Schema */
-    protected $schema;
+    protected Schema $schema;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
 
-        $transforms = [new RenameTypes(
-            static function ($name) {
+        $transforms = [
+            new RenameTypes(
+                static function ($name) {
                     return [
                         'Property' => 'House',
                         'Location' => 'Spots',
@@ -34,17 +32,15 @@ class RenameTypeTest extends TestCase
                         'TestInterfaceKind' => 'TestingInterfaceKinds',
                         'TestImpl1' => 'TestImplementation1',
                     ][$name] ?? null;
-            }
-        ),
+                },
+            ),
         ];
 
         $this->schema = GraphQLTools::transformSchema(TestingSchemas::propertySchema(), $transforms);
     }
 
-    /**
-     * @see it('should work')
-     */
-    public function testShouldWork() : void
+    /** @see it('should work') */
+    public function testShouldWork(): void
     {
         $result = GraphQL::executeQuery(
             $this->schema,
@@ -68,7 +64,7 @@ class RenameTypeTest extends TestCase
             [],
             [
                 'input' => ['test' => 'bar'],
-            ]
+            ],
         );
 
         static::assertEquals(
@@ -80,7 +76,7 @@ class RenameTypeTest extends TestCase
                     'propertyById' => ['id' => 'p1'],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 }

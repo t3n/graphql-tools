@@ -12,6 +12,7 @@ use GraphQLTools\Generate\AttachDirectiveResolvers;
 use GraphQLTools\GraphQLTools;
 use PHPUnit\Framework\TestCase;
 use Throwable;
+
 use function is_string;
 use function React\Promise\resolve;
 use function strtolower;
@@ -19,18 +20,15 @@ use function strtoupper;
 
 class AttachDirectiveResolversOnFieldTest extends TestCase
 {
-    /** @var ReactPromiseAdapter */
-    protected $promiseAdapter;
-    /** @var string */
-    protected $testSchemaWithDirectives;
-    /** @var object */
-    protected $testObject;
+    protected ReactPromiseAdapter $promiseAdapter;
+    protected string $testSchemaWithDirectives;
+    protected object $testObject;
     /** @var mixed[] */
-    protected $testResolversDirectives;
+    protected array $testResolversDirectives;
     /** @var mixed[] */
-    protected $directiveResolvers;
+    protected array $directiveResolvers;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -75,7 +73,7 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
                 'multiDirectives' => static function () {
                     return 'Giau. Tran Minh';
                 },
-                'throwError' => static function () : void {
+                'throwError' => static function (): void {
                     throw new Error('This error for testing');
                 },
             ],
@@ -122,10 +120,8 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         ];
     }
 
-    /**
-     * @see it('throws error if directiveResolvers argument is an array')
-     */
-    public function testThrowsErrorIfDirectiveResolversArgumentIsAnArray() : void
+    /** @see it('throws error if directiveResolvers argument is an array') */
+    public function testThrowsErrorIfDirectiveResolversArgumentIsAnArray(): void
     {
         static::markTestSkipped('Not failable in php');
 
@@ -142,10 +138,8 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
         }
     }
 
-    /**
-     * @see it('upper String from resolvers')
-     */
-    public function testUpperStringFromResolvers() : void
+    /** @see it('upper String from resolvers') */
+    public function testUpperStringFromResolvers(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->testSchemaWithDirectives,
@@ -159,20 +153,17 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
 
         $expected = ['hello' => 'GIAU. TRAN MINH'];
 
-        /** @var ExecutionResult $res */
         $res = null;
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
-            ->then(static function (ExecutionResult $r) use (&$res) : void {
+            ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
             });
 
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('using default resolver for object property')
-     */
-    public function testUsingDefaultResolverForObjectProperty() : void
+    /** @see it('using default resolver for object property') */
+    public function testUsingDefaultResolverForObjectProperty(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->testSchemaWithDirectives,
@@ -190,20 +181,17 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
             'object' => ['hello' => 'GIAU. TRAN MINH'],
         ];
 
-        /** @var ExecutionResult $res */
         $res = null;
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
-            ->then(static function (ExecutionResult $r) use (&$res) : void {
+            ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
             });
 
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('passes in directive arguments to the directive resolver')
-     */
-    public function testPassesInDirectiveArgumentsToTheDirectiveResolver() : void
+    /** @see it('passes in directive arguments to the directive resolver') */
+    public function testPassesInDirectiveArgumentsToTheDirectiveResolver(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->testSchemaWithDirectives,
@@ -217,20 +205,17 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
 
         $expected = ['withDefault' => 'some default_value'];
 
-        /** @var ExecutionResult $res */
         $res = null;
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
-            ->then(static function (ExecutionResult $r) use (&$res) : void {
+            ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
             });
 
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('No effect if missing directive resolvers')
-     */
-    public function testNoEffectIfMissingDirectiveResolvers() : void
+    /** @see it('No effect if missing directive resolvers') */
+    public function testNoEffectIfMissingDirectiveResolvers(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->testSchemaWithDirectives,
@@ -245,19 +230,16 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
 
         $expected = ['hello' => 'giau. tran minh'];
 
-        /** @var ExecutionResult $res */
         $res = null;
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
-            ->then(static function (ExecutionResult $r) use (&$res) : void {
+            ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
             });
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('If resolver return Promise, keep using it')
-     */
-    public function testIfResolverReturnPromiseKeepUsingIt() : void
+    /** @see it('If resolver return Promise, keep using it') */
+    public function testIfResolverReturnPromiseKeepUsingIt(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->testSchemaWithDirectives,
@@ -271,19 +253,16 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
 
         $expected = ['asyncResolver' => 'GIAU. TRAN MINH'];
 
-        /** @var ExecutionResult $res */
         $res = null;
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
-            ->then(static function (ExecutionResult $r) use (&$res) : void {
+            ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
             });
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('Multi directives apply with LTR order')
-     */
-    public function testMultiDirectivesApplyWithLTROrder() : void
+    /** @see it('Multi directives apply with LTR order') */
+    public function testMultiDirectivesApplyWithLTROrder(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->testSchemaWithDirectives,
@@ -297,19 +276,16 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
 
         $expected = ['multiDirectives' => 'giau. tran minh'];
 
-        /** @var ExecutionResult $res */
         $res = null;
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
-            ->then(static function (ExecutionResult $r) use (&$res) : void {
+            ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
             });
         static::assertEquals($expected, $res->data);
     }
 
-    /**
-     * @see it('Allow to catch error from next resolver')
-     */
-    public function testAllowToCatchErrorFromNextResolver() : void
+    /** @see it('Allow to catch error from next resolver') */
+    public function testAllowToCatchErrorFromNextResolver(): void
     {
         $schema = GraphQLTools::makeExecutableSchema([
             'typeDefs' => $this->testSchemaWithDirectives,
@@ -323,10 +299,9 @@ class AttachDirectiveResolversOnFieldTest extends TestCase
 
         $expected = ['throwError' => 'This error for testing'];
 
-        /** @var ExecutionResult $res */
         $res = null;
         GraphQL::promiseToExecute($this->promiseAdapter, $schema, $query, [], [])
-            ->then(static function (ExecutionResult $r) use (&$res) : void {
+            ->then(static function (ExecutionResult $r) use (&$res): void {
                 $res = $r;
             });
 

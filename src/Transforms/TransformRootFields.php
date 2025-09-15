@@ -8,6 +8,7 @@ use GraphQL\Type\Definition\NamedType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
 use GraphQLTools\Stitching\SchemaRecreation;
+
 use function count;
 
 class TransformRootFields implements Transform
@@ -20,7 +21,7 @@ class TransformRootFields implements Transform
         $this->transform = $transform;
     }
 
-    public function transformSchema(Schema $originalSchema) : Schema
+    public function transformSchema(Schema $originalSchema): Schema
     {
         return VisitSchema::invoke(
             $originalSchema,
@@ -28,31 +29,34 @@ class TransformRootFields implements Transform
                 VisitSchemaKind::QUERY => function (ObjectType $type) {
                     return static::transformFields($type, function ($fieldName, $field) {
                         $transform = $this->transform;
+
                         return $transform('Query', $fieldName, $field);
                     });
                 },
                 VisitSchemaKind::MUTATION => function (ObjectType $type) {
                     return static::transformFields($type, function ($fieldName, $field) {
                         $transform = $this->transform;
+
                         return $transform('Mutation', $fieldName, $field);
                     });
                 },
                 VisitSchemaKind::SUBSCRIPTION => function (ObjectType $type) {
                     return static::transformFields($type, function ($fieldName, $field) {
                         $transform = $this->transform;
+
                         return $transform('Subscription', $fieldName, $field);
                     });
                 },
-            ]
+            ],
         );
     }
 
-    private static function transformFields(ObjectType $type, callable $transformer) : ?ObjectType
+    private static function transformFields(ObjectType $type, callable $transformer): ObjectType|null
     {
         $resolveType = SchemaRecreation::createResolveType(
             static function (string $name, NamedType $originalType) {
                 return $originalType;
-            }
+            },
         );
         $fields      = $type->getFields();
         $newFields   = [];
@@ -64,7 +68,7 @@ class TransformRootFields implements Transform
             } elseif ($newField !== false) {
                 $newFields[$newField['name']] = $newField['field'];
             } else {
-                unset($newField[$fieldName]);
+                unset($newFields[$fieldName]);
             }
         }
 

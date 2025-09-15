@@ -16,16 +16,14 @@ use PHPUnit\Framework\TestCase;
 
 class MergeSchemasThroughTransformsTest extends TestCase
 {
-    /** @var Schema */
-    protected $transformedPropertySchema;
-    /** @var Schema */
-    protected $transformedBookingSchema;
-    /** @var Schema */
-    protected $mergedSchema;
+    protected Schema $transformedPropertySchema;
+    protected Schema $transformedBookingSchema;
+    protected Schema $mergedSchema;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
+
         $propertySchema = TestingSchemas::propertySchema();
         $bookingSchema  = TestingSchemas::bookingSchema();
 
@@ -35,19 +33,19 @@ class MergeSchemasThroughTransformsTest extends TestCase
                 new FilterRootFields(
                     static function ($operation, $rootField) {
                         return $operation . $rootField === 'Query.properties';
-                    }
+                    },
                 ),
                 new RenameTypes(
                     static function ($name) {
                         return 'Properties_' . $name;
-                    }
+                    },
                 ),
                 new RenameRootFields(
                     static function ($name) {
                         return 'Properties_' . $name;
-                    }
+                    },
                 ),
-            ]
+            ],
         );
 
         $this->transformedBookingSchema = GraphQLTools::transformSchema(
@@ -56,19 +54,19 @@ class MergeSchemasThroughTransformsTest extends TestCase
                 new FilterRootFields(
                     static function ($operation, $rootField) {
                         return $operation . $rootField === 'Query.bookings';
-                    }
+                    },
                 ),
                 new RenameTypes(
                     static function ($name) {
                         return 'Bookings_' . $name;
-                    }
+                    },
                 ),
                 new RenameRootFields(
                     static function ($name) {
                         return 'Booking_' . $name;
-                    }
+                    },
                 ),
-            ]
+            ],
         );
 
         $this->mergedSchema = GraphQLTools::mergeSchemas([
@@ -148,10 +146,8 @@ class MergeSchemasThroughTransformsTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('node should work')
-     */
-    public function testNodeShouldWork() : void
+    /** @see it('node should work') */
+    public function testNodeShouldWork(): void
     {
         $result = GraphQL::executeQuery(
             $this->mergedSchema,
@@ -185,7 +181,7 @@ class MergeSchemasThroughTransformsTest extends TestCase
             [
                 'pid' => 'p1',
                 'bid' => 'b1',
-            ]
+            ],
         );
 
         static::assertEquals(
@@ -220,7 +216,7 @@ class MergeSchemasThroughTransformsTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 }

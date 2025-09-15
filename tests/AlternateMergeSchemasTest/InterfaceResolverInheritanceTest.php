@@ -11,14 +11,13 @@ use PHPUnit\Framework\TestCase;
 
 class InterfaceResolverInheritanceTest extends TestCase
 {
-    /** @var string */
-    private $testSchemaWithInterfaceResolvers;
+    private string $testSchemaWithInterfaceResolvers;
     /** @var mixed[] */
-    private $user;
+    private array $user;
     /** @var mixed[] */
-    private $resolvers;
+    private array $resolvers;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -46,12 +45,14 @@ class InterfaceResolverInheritanceTest extends TestCase
                 },
                 'id' => static function ($args) {
                     $id = $args['_id'];
+
                     return 'Node:' . $id;
                 },
             ],
             'User' => [
                 'name' => static function ($root) {
                     $name = $root['name'];
+
                     return 'User:' . $name;
                 },
             ],
@@ -63,10 +64,8 @@ class InterfaceResolverInheritanceTest extends TestCase
         ];
     }
 
-    /**
-     * @see it('copies resolvers from interface')
-     */
-    public function testCopiesResolversFromInterface() : void
+    /** @see it('copies resolvers from interface') */
+    public function testCopiesResolversFromInterface(): void
     {
         $mergedSchema = GraphQLTools::mergeSchemas([
             'schemas' => [
@@ -91,14 +90,12 @@ class InterfaceResolverInheritanceTest extends TestCase
                     ],
                 ],
             ],
-            $response->toArray()
+            $response->toArray(),
         );
     }
 
-    /**
-     * @see it('does not copy resolvers from interface when flag is false')
-     */
-    public function testDoesNotCopyResolversFromInterfaceWhenFlagIsFalse() : void
+    /** @see it('does not copy resolvers from interface when flag is false') */
+    public function testDoesNotCopyResolversFromInterfaceWhenFlagIsFalse(): void
     {
         $mergedSchema = GraphQLTools::mergeSchemas([
             'schemas' => [
@@ -114,14 +111,12 @@ class InterfaceResolverInheritanceTest extends TestCase
         $query    = '{ user { id name } }';
         $response = GraphQL::executeQuery($mergedSchema, $query);
         static::assertCount(1, $response->errors);
-        static::assertEquals('Cannot return null for non-nullable field User.id.', $response->errors[0]->getMessage());
+        static::assertEquals('Cannot return null for non-nullable field "User.id".', $response->errors[0]->getMessage());
         static::assertEquals(['user', 'id'], $response->errors[0]->getPath());
     }
 
-    /**
-     * @see it('does not copy resolvers from interface when flag is not provided')
-     */
-    public function testDoesNotCopyResolversFromInterfaceWhenFlagIsNotProvided() : void
+    /** @see it('does not copy resolvers from interface when flag is not provided') */
+    public function testDoesNotCopyResolversFromInterfaceWhenFlagIsNotProvided(): void
     {
         $mergedSchema = GraphQLTools::mergeSchemas([
             'schemas' => [
@@ -136,7 +131,7 @@ class InterfaceResolverInheritanceTest extends TestCase
         $query    = '{ user { id name } }';
         $response = GraphQL::executeQuery($mergedSchema, $query);
         static::assertCount(1, $response->errors);
-        static::assertEquals('Cannot return null for non-nullable field User.id.', $response->errors[0]->getMessage());
+        static::assertEquals('Cannot return null for non-nullable field "User.id".', $response->errors[0]->getMessage());
         static::assertEquals(['user', 'id'], $response->errors[0]->getPath());
     }
 }

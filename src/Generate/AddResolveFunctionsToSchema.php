@@ -14,7 +14,9 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use GraphQLTools\Transforms\ConvertEnumValues;
 use GraphQLTools\Transforms\Transforms;
+
 use function array_keys;
+use function assert;
 use function gettype;
 use function is_array;
 use function is_callable;
@@ -31,10 +33,10 @@ class AddResolveFunctionsToSchema
      * @throws SchemaError
      */
     public static function invoke(
-        $options,
-        $legacyInputResolvers = null,
-        ?array $legacyInputValidationOptions = null
-    ) : Schema {
+        Schema|array $options,
+        array|null $legacyInputResolvers = null,
+        array|null $legacyInputValidationOptions = null,
+    ): Schema {
         if ($options instanceof Schema) {
             $options = [
                 'schema' => $options,
@@ -43,8 +45,8 @@ class AddResolveFunctionsToSchema
             ];
         }
 
-        /** @var Schema $schema */
-        $schema                         = $options['schema'];
+        $schema = $options['schema'];
+        assert($schema instanceof Schema);
         $inputResolvers                 = $options['resolvers'];
         $resolverValidationOptions      = $options['resolverValidationOptions'] ?? [];
         $inheritResolversFromInterfaces = $options['inheritResolversFromInterfaces'] ?? false;
@@ -62,13 +64,13 @@ class AddResolveFunctionsToSchema
             if (! is_array($resolverValue) && ! is_object($resolverValue) && ! is_callable($resolverValue)) {
                 throw new SchemaError(
                     '"' . $typeName . '" defined in resolvers, but has invalid value "' .
-                    gettype($resolverValue) . '". A resolver\'s value must be of type object or function.'
+                    gettype($resolverValue) . '". A resolver\'s value must be of type object or function.',
                 );
             }
 
             try {
                 $type = $schema->getType($typeName);
-            } catch (Error $error) {
+            } catch (Error) {
                 $type = null;
             }
 
@@ -104,6 +106,7 @@ class AddResolveFunctionsToSchema
                         default:
                             $type->$fieldName = $resolverValue[$fieldName];
                     }
+
                     continue;
                 }
 
@@ -114,11 +117,11 @@ class AddResolveFunctionsToSchema
                         }
 
                         throw new SchemaError(
-                            $typeName . '.' . $fieldName . ' was defined in resolvers, but enum is not in schema'
+                            $typeName . '.' . $fieldName . ' was defined in resolvers, but enum is not in schema',
                         );
                     }
 
-                    $enumValueMap[$type->name]             = $enumValueMap[$type->name] ?? [];
+                    $enumValueMap[$type->name]           ??= [];
                     $enumValueMap[$type->name][$fieldName] = $resolverValue[$fieldName];
                     continue;
                 }
@@ -147,9 +150,10 @@ class AddResolveFunctionsToSchema
                 } else {
                     if (! is_array($fieldResolve)) {
                         throw new SchemaError(
-                            'Resolver ' . $typeName . '.' . $fieldName . ' must be object or function'
+                            'Resolver ' . $typeName . '.' . $fieldName . ' must be object or function',
                         );
                     }
+
                     static::setFieldProperties($field, $fieldResolve);
                 }
             }
@@ -162,12 +166,11 @@ class AddResolveFunctionsToSchema
         ]);
     }
 
-    /**
-     * @return FieldDefinition[]|null
-     */
-    protected static function getFieldsForType(Type $type) : ?array
+    /** @return FieldDefinition[]|null */
+    protected static function getFieldsForType(Type $type): array|null
     {
-        if ($type instanceof ObjectType ||
+        if (
+            $type instanceof ObjectType ||
             $type instanceof InterfaceType
         ) {
             return $type->getFields();
@@ -181,7 +184,7 @@ class AddResolveFunctionsToSchema
      *
      * @param mixed[] $propertiesObj
      */
-    protected static function setFieldProperties(FieldDefinition $field, array $propertiesObj) : void
+    protected static function setFieldProperties(FieldDefinition $field, array $propertiesObj): void
     {
         foreach ($propertiesObj as $propertyName => $property) {
             switch ($propertyName) {

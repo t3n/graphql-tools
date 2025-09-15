@@ -10,10 +10,8 @@ use PHPUnit\Framework\TestCase;
 
 class ExtensionExtractionTest extends TestCase
 {
-    /**
-     * @see it('extracts extended inputs')
-     */
-    public function testExtractsExtendedInputs() : void
+    /** @see it('extracts extended inputs') */
+    public function testExtractsExtendedInputs(): void
     {
         $typeDefs = '
             input Input {
@@ -32,10 +30,8 @@ class ExtensionExtractionTest extends TestCase
         static::assertEquals('InputObjectTypeExtension', $extensionAst->definitions[0]->kind);
     }
 
-    /**
-     * @see it('extracts extended unions')
-     */
-    public function testExtractsExtendedUnions() : void
+    /** @see it('extracts extended unions') */
+    public function testExtractsExtendedUnions(): void
     {
         $typeDefs = '
             type Person {
@@ -58,10 +54,8 @@ class ExtensionExtractionTest extends TestCase
         static::assertEquals('UnionTypeExtension', $extensionAst->definitions[0]->kind);
     }
 
-    /**
-     * @see it('extracts extended enums')
-     */
-    public function testExtractsExtendedEnums() : void
+    /** @see it('extracts extended enums') */
+    public function testExtractsExtendedEnums(): void
     {
         $typeDefs = '
             enum Color {

@@ -15,6 +15,7 @@ use GraphQLTools\Generate\BuildSchemaFromTypeDefinitions;
 use GraphQLTools\Generate\DecorateWithLogger;
 use GraphQLTools\Generate\ForEachField;
 use GraphQLTools\Generate\SchemaError;
+
 use function array_filter;
 use function array_reduce;
 use function is_array;
@@ -28,17 +29,15 @@ class MakeExecutableSchema
      * @param mixed[]|null   $legacyInputValidationOptions
      */
     public static function addResolveFunctionsToSchema(
-        $options,
-        ?array $legacyInputResolvers = null,
-        ?array $legacyInputValidationOptions = null
-    ) : Schema {
+        array|Schema $options,
+        array|null $legacyInputResolvers = null,
+        array|null $legacyInputValidationOptions = null,
+    ): Schema {
         return AddResolveFunctionsToSchema::invoke($options, $legacyInputResolvers, $legacyInputValidationOptions);
     }
 
-    /**
-     * @param mixed[] $options
-     */
-    public static function invoke(array $options) : Schema
+    /** @param mixed[] $options */
+    public static function invoke(array $options): Schema
     {
         $typeDefs                       = $options['typeDefs'] ?? null;
         $resolvers                      = $options['resolvers'] ?? [];
@@ -63,7 +62,7 @@ class MakeExecutableSchema
         }
 
         if (Utils::isNumericArray($resolvers)) {
-            $resolverMap = array_filter($resolvers, static function (array $resolverObj) : bool {
+            $resolverMap = array_filter($resolvers, static function (array $resolverObj): bool {
                 return ! Utils::isNumericArray($resolverObj);
             });
 
@@ -106,14 +105,14 @@ class MakeExecutableSchema
         return $schema;
     }
 
-    public static function addErrorLoggingToSchema(Schema $schema, Logger $logger) : void
+    public static function addErrorLoggingToSchema(Schema $schema, Logger $logger): void
     {
         ForEachField::invoke(
             $schema,
-            static function (FieldDefinition $field, string $typeName, string $fieldName) use ($logger) : void {
+            static function (FieldDefinition $field, string $typeName, string $fieldName) use ($logger): void {
                 $errorHint        = $typeName . '.' . $fieldName;
                 $field->resolveFn = DecorateWithLogger::invoke($field->resolveFn, $logger, $errorHint);
-            }
+            },
         );
     }
 }

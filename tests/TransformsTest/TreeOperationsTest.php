@@ -12,20 +12,20 @@ use GraphQLTools\GraphQLTools;
 use GraphQLTools\Transforms\ExtractField;
 use GraphQLTools\Transforms\WrapQuery;
 use PHPUnit\Framework\TestCase;
+
 use function array_merge;
 
 class TreeOperationsTest extends TestCase
 {
     /** @var mixed[] */
-    protected $data;
-    /** @var Schema */
-    protected $subSchema;
-    /** @var Schema */
-    protected $schema;
+    protected array $data;
+    protected Schema $subSchema;
+    protected Schema $schema;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
+
         $this->data = [
             'u1' => [
                 'id' => 'u1',
@@ -85,7 +85,7 @@ class TreeOperationsTest extends TestCase
                         if (isset($this->data[$input['id']])) {
                             return array_merge(
                                 $this->data[$input['id']],
-                                $input
+                                $input,
                             );
                         }
 
@@ -96,7 +96,7 @@ class TreeOperationsTest extends TestCase
                         if (isset($this->data[$input['id']])) {
                             return array_merge(
                                 $this->data[$input['id']]['address'],
-                                $input
+                                $input,
                             );
                         }
 
@@ -134,6 +134,7 @@ class TreeOperationsTest extends TestCase
                 'Query' => [
                     'addressByUser' => function ($parent, $args, $context, $info) {
                         $id = $args['id'];
+
                         return GraphQLTools::delegateToSchema([
                             'schema' => $this->subSchema,
                             'operation' => 'query',
@@ -158,7 +159,7 @@ class TreeOperationsTest extends TestCase
                                     // how to process the data result at path
                                     static function ($result) {
                                         return $result ? $result['address'] : null;
-                                    }
+                                    },
                                 ),
                             ],
                         ]);
@@ -206,7 +207,7 @@ class TreeOperationsTest extends TestCase
 
                         return array_merge(
                             $userResult,
-                            ['address' => $addressResult]
+                            ['address' => $addressResult],
                         );
                     },
                 ],
@@ -214,10 +215,8 @@ class TreeOperationsTest extends TestCase
         ]);
     }
 
-    /**
-     * @see it('wrapping delegation')
-     */
-    public function testWrappingDelegation() : void
+    /** @see it('wrapping delegation') */
+    public function testWrappingDelegation(): void
     {
         $result = GraphQL::executeQuery(
             $this->schema,
@@ -228,7 +227,7 @@ class TreeOperationsTest extends TestCase
                         zip
                     }
                 }
-            '
+            ',
         );
 
         static::assertEquals(
@@ -240,14 +239,12 @@ class TreeOperationsTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 
-    /**
-     * @see it('extracting delegation')
-     */
-    public function testExtractingDelegation() : void
+    /** @see it('extracting delegation') */
+    public function testExtractingDelegation(): void
     {
         $result = GraphQL::executeQuery(
             $this->schema,
@@ -281,7 +278,7 @@ class TreeOperationsTest extends TestCase
                     'streetAddress' => 'New Address 555',
                     'zip' => '22222',
                 ],
-            ]
+            ],
         );
 
         static::assertEquals(
@@ -296,7 +293,7 @@ class TreeOperationsTest extends TestCase
                     ],
                 ],
             ],
-            $result->toArray()
+            $result->toArray(),
         );
     }
 }

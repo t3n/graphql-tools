@@ -10,15 +10,13 @@ use GraphQL\Type\Definition\ResolveInfo;
 class DefaultMergedResolver
 {
     /**
-     * @param mixed   $parent
      * @param mixed[] $args
-     * @param mixed   $context
      *
      * @return array|mixed[]|null
      *
      * @throws Error
      */
-    public static function invoke($parent, array $args, $context, ResolveInfo $info)
+    public static function invoke(mixed $parent, array $args, mixed $context, ResolveInfo $info)
     {
         if (! $parent) {
             return null;
@@ -29,10 +27,11 @@ class DefaultMergedResolver
 
         if ($errorResult['kind'] === 'OWN') {
             $error = Error::createLocatedError(
-                new Error($errorResult['error']->message),
+                new Error($errorResult['error']->getMessage()),
                 $info->fieldNodes,
-                $info->path
+                $info->path,
             );
+
             throw $error;
         }
 

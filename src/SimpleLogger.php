@@ -9,20 +9,17 @@ use Throwable;
 class SimpleLogger implements Logger
 {
     /** @var Throwable[] */
-    public $errors;
-    /** @var string|null  */
-    public $name;
+    public array $errors;
     /** @var callable|null  */
     public $callback;
 
-    public function __construct(?string $name = null, ?callable $callback = null)
+    public function __construct(public string|null $name = null, callable|null $callback = null)
     {
-        $this->name     = $name;
         $this->errors   = [];
         $this->callback = $callback;
     }
 
-    public function log(Throwable $error) : void
+    public function log(Throwable $error): void
     {
         $this->errors[] = $error;
         if (! $this->callback) {

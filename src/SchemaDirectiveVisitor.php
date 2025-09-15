@@ -7,9 +7,10 @@ namespace GraphQLTools;
 use Exception;
 use GraphQL\Executor\Values;
 use GraphQL\Type\Definition\Directive;
-use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use GraphQL\Utils\AST;
+
+use function assert;
 use function count;
 use function preg_match_all;
 use function strlen;
@@ -19,19 +20,14 @@ use function substr;
 
 class SchemaDirectiveVisitor extends SchemaVisitor
 {
-    /** @var string */
-    public $name;
+    public string $name;
     /** @var mixed[] */
-    public $args;
-    /** @var Type */
-    public $visitedType;
-    /** @var mixed */
-    public $context;
+    public array $args;
+    public mixed $visitedType;
+    public mixed $context;
 
-    /**
-     * @param mixed[] $config
-     */
-    public function init(array $config) : void
+    /** @param mixed[] $config */
+    public function init(array $config): void
     {
         $this->name        = $config['name'];
         $this->args        = $config['args'];
@@ -40,18 +36,17 @@ class SchemaDirectiveVisitor extends SchemaVisitor
         $this->context     = $config['context'];
     }
 
-    public static function getDirectiveDeclaration(string $directiveName, Schema $schema) : ?Directive
+    public static function getDirectiveDeclaration(string $directiveName, Schema $schema): Directive|null
     {
         return $schema->getDirective($directiveName);
     }
 
     /**
      * @param mixed[] $directiveVisitors
-     * @param mixed   $context
      *
      * @return callable[]
      */
-    public static function visitSchemaDirectives(Schema $schema, array $directiveVisitors, $context = []) : array
+    public static function visitSchemaDirectives(Schema $schema, array $directiveVisitors, mixed $context = []): array
     {
         $declaredDirectives = static::getDeclaredDirectives($schema, $directiveVisitors);
 
@@ -62,16 +57,16 @@ class SchemaDirectiveVisitor extends SchemaVisitor
 
         $visitorSelector = static function (
             $type,
-            string $methodName
+            string $methodName,
         ) use (
             $directiveVisitors,
             $declaredDirectives,
             $schema,
             $context,
-            &$createdVisitors
-        ) : array {
+            &$createdVisitors,
+        ): array {
             $visitors       = [];
-            $astNode        = $type instanceof Schema ? $type->getAstNode() : ($type->astNode ?? null);
+            $astNode        = $type instanceof Schema ? $type->astNode : ($type->astNode ?? null);
             $directiveNodes = $astNode ? $astNode->directives : null;
 
             if (! $directiveNodes) {
@@ -84,8 +79,8 @@ class SchemaDirectiveVisitor extends SchemaVisitor
                     break;
                 }
 
-                /** @var SchemaDirectiveVisitor $visitorClass */
                 $visitorClass = $directiveVisitors[$directiveName];
+                assert($visitorClass instanceof SchemaDirectiveVisitor);
 
                 if (! $visitorClass::implementsVisitorMethod($methodName)) {
                     break;
@@ -135,7 +130,7 @@ class SchemaDirectiveVisitor extends SchemaVisitor
      *
      * @return Directive[]
      */
-    protected static function getDeclaredDirectives(Schema $schema, array $directiveVisitors) : array
+    protected static function getDeclaredDirectives(Schema $schema, array $directiveVisitors): array
     {
         /** @var Directive[] $declaredDirectives */
         $declaredDirectives = [];
@@ -162,10 +157,12 @@ class SchemaDirectiveVisitor extends SchemaVisitor
 
             foreach ($decl->locations as $loc) {
                 $visitorMethodName = static::directiveLocationToVisitorMethodName($loc);
-                if (SchemaVisitor::implementsVisitorMethod($visitorMethodName)
-                    && ! $visitorClass::implementsVisitorMethod($visitorMethodName)) {
+                if (
+                    SchemaVisitor::implementsVisitorMethod($visitorMethodName)
+                    && ! $visitorClass::implementsVisitorMethod($visitorMethodName)
+                ) {
                     throw new Exception(
-                        'SchemaDirectiveVisitor for @' . $name . ' must implement ' . $visitorMethodName . ' method'
+                        'SchemaDirectiveVisitor for @' . $name . ' must implement ' . $visitorMethodName . ' method',
                     );
                 }
             }
@@ -174,7 +171,7 @@ class SchemaDirectiveVisitor extends SchemaVisitor
         return $declaredDirectives;
     }
 
-    protected static function directiveLocationToVisitorMethodName(string $loc) : string
+    protected static function directiveLocationToVisitorMethodName(string $loc): string
     {
         preg_match_all('/([^_]*)_?/', $loc, $matches);
 

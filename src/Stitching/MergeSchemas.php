@@ -18,9 +18,11 @@ use GraphQLTools\Generate\ExtractExtensionDefinitions;
 use GraphQLTools\MergeDeep;
 use GraphQLTools\SchemaDirectiveVisitor;
 use GraphQLTools\Utils;
+
 use function array_merge;
 use function array_reduce;
 use function array_values;
+use function assert;
 use function count;
 use function is_array;
 use function is_string;
@@ -28,10 +30,8 @@ use function substr;
 
 class MergeSchemas
 {
-    /**
-     * @param mixed[] $options
-     */
-    public static function invoke(array $options) : Schema
+    /** @param mixed[] $options */
+    public static function invoke(array $options): Schema
     {
         $schemas                        = $options['schemas'];
         $onTypeConflict                 = $options['onTypeConflict'] ?? null;
@@ -65,12 +65,14 @@ class MergeSchemas
                         'type' => $queryType,
                     ]);
                 }
+
                 if ($mutationType) {
                     static::addTypeCandidate($typeCandidates, 'Mutation', [
                         'schema' => $schema,
                         'type' => $mutationType,
                     ]);
                 }
+
                 if ($subscriptionType) {
                     static::addTypeCandidate($typeCandidates, 'Subscription', [
                         'schema' => $schema,
@@ -80,7 +82,8 @@ class MergeSchemas
 
                 $typeMap = $schema->getTypeMap();
                 foreach ($typeMap as $typeName => $type) {
-                    if (! ($type instanceof NamedType) ||
+                    if (
+                        ! ($type instanceof NamedType) ||
                         substr(Type::getNamedType($type)->name, 0, 2) === '__' ||
                         $type === $queryType ||
                         $type === $mutationType ||
@@ -128,7 +131,7 @@ class MergeSchemas
                 static function (array $left, $right) {
                     return MergeDeep::invoke($left, $right);
                 },
-                []
+                [],
             );
         }
 
@@ -193,15 +196,17 @@ class MergeSchemas
             'inheritResolversFromInterfaces' => $inheritResolversFromInterfaces,
         ]);
 
-        static::forEachField($mergedSchema, static function ($field) use ($mergeInfo) : void {
+        static::forEachField($mergedSchema, static function ($field) use ($mergeInfo): void {
             if (isset($field->resolveFn)) {
                 $fieldResolver    = $field->resolveFn;
                 $field->resolveFn = static function ($parent, $args, $context, $info) use ($mergeInfo, $fieldResolver) {
                     $newInfo            = $info;
                     $newInfo->mergeInfo = $mergeInfo;
+
                     return $fieldResolver($parent, $args, $context, $newInfo);
                 };
             }
+
             // Future?
             if (! isset($field->subscribeFn)) {
                 return;
@@ -211,6 +216,7 @@ class MergeSchemas
             $field->subscribeFn = static function ($parent, $args, $context, $info) use ($mergeInfo, $fieldResolver) {
                 $newInfo            = $info;
                 $newInfo->mergeInfo = $mergeInfo;
+
                 return $fieldResolver($parent, $args, $context, $newInfo);
             };
         });
@@ -226,36 +232,30 @@ class MergeSchemas
      * @param Schema[] $allSchemas
      * @param mixed[]  $fragments
      */
-    private static function createMergeInfo(array $allSchemas, array &$fragments) : object
+    private static function createMergeInfo(array $allSchemas, array &$fragments): object
     {
         return new class ($fragments) {
             /** @var mixed[] */
-            public $fragments;
+            public array $fragments;
 
-            /**
-             * @param mixed[] $fragments
-             */
+            /** @param mixed[] $fragments */
             public function __construct(array &$fragments)
             {
                 $this->fragments = &$fragments;
             }
 
-            /**
-             * @param mixed[] $options
-             *
-             * @return mixed
-             */
-            public function delegateToSchema(array $options)
+            /** @param mixed[] $options */
+            public function delegateToSchema(array $options): mixed
             {
                 return DelegateToSchema::invoke(array_merge(
                     $options,
-                    ['transforms' => $options['transforms'] ?? null ]
+                    ['transforms' => $options['transforms'] ?? null],
                 ));
             }
         };
     }
 
-    protected static function createDelegatingResolver(?Schema $schema, string $operation, string $fieldName) : callable
+    protected static function createDelegatingResolver(Schema|null $schema, string $operation, string $fieldName): callable
     {
         return static function ($root, $args, $context, $info) use ($schema, $operation, $fieldName) {
             return $info->mergeInfo->delegateToSchema([
@@ -269,7 +269,7 @@ class MergeSchemas
         };
     }
 
-    private static function forEachField(Schema $schema, callable $fn) : void
+    private static function forEachField(Schema $schema, callable $fn): void
     {
         $typeMap = $schema->getTypeMap();
         foreach ($typeMap as $typeName => $type) {
@@ -288,7 +288,7 @@ class MergeSchemas
      * @param mixed[] $typeCandidates
      * @param mixed[] $typeCandidate
      */
-    private static function addTypeCandidate(array &$typeCandidates, string $name, array $typeCandidate) : void
+    private static function addTypeCandidate(array &$typeCandidates, string $name, array $typeCandidate): void
     {
         if (! isset($typeCandidates[$name])) {
             $typeCandidates[$name] = [];
@@ -297,12 +297,8 @@ class MergeSchemas
         $typeCandidates[$name][] = $typeCandidate;
     }
 
-    /**
-     * @param mixed[] $candidates
-     *
-     * @return mixed
-     */
-    private static function defaultVisitType(string $name, array $candidates, ?callable $candidateSelector = null)
+    /** @param mixed[] $candidates */
+    private static function defaultVisitType(string $name, array $candidates, callable|null $candidateSelector = null): mixed
     {
         if (! $candidateSelector) {
             $candidateSelector = static function (array $cands) {
@@ -336,8 +332,8 @@ class MergeSchemas
             $resolverKey = $operationName === 'subscription' ? 'subscribe' : 'resolve';
 
             foreach ($candidates as $candidate) {
-                /** @var ObjectType $candidateType */
-                $candidateType   = $candidate['type'];
+                $candidateType = $candidate['type'];
+                assert($candidateType instanceof ObjectType);
                 $schema          = $candidate['schema'] ?? null;
                 $candidateFields = $candidateType->getFields();
                 $fields          = array_merge($fields, $candidateFields);
@@ -361,6 +357,7 @@ class MergeSchemas
         }
 
         $candidate = $candidateSelector($candidates);
+
         return $candidate['type'];
     }
 }

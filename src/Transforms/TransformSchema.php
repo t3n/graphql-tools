@@ -10,10 +10,8 @@ use GraphQLTools\Stitching\Resolvers;
 
 class TransformSchema
 {
-    /**
-     * @param Transform[] $transforms
-     */
-    public static function invoke(Schema $targetSchema, array $transforms) : Schema
+    /** @param Transform[] $transforms */
+    public static function invoke(Schema $targetSchema, array $transforms): Schema
     {
         $schema    = VisitSchema::invoke($targetSchema, [], true);
         $mapping   = Resolvers::generateSimpleMapping($targetSchema);
@@ -21,11 +19,12 @@ class TransformSchema
         $schema    = MakeExecutableSchema::addResolveFunctionsToSchema(
             $schema,
             $resolvers,
-            ['allowResolversNotInSchema' => true]
+            ['allowResolversNotInSchema' => true],
         );
 
         $schema             = Transforms::applySchemaTransforms($schema, $transforms);
         $schema->transforms = $transforms;
+
         return $schema;
     }
 }

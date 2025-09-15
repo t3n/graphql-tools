@@ -12,18 +12,17 @@ use GraphQL\Language\AST\InterfaceTypeExtensionNode;
 use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\ObjectTypeExtensionNode;
 use GraphQL\Language\AST\UnionTypeExtensionNode;
+use GraphQLTools\Utils;
+
 use function array_filter;
 use function array_values;
-use function iterator_to_array;
 
 class ExtractExtensionDefinitions
 {
-    public static function invoke(DocumentNode $ast) : DocumentNode
+    public static function invoke(DocumentNode $ast): DocumentNode
     {
-        $definitions   = $ast->definitions instanceof NodeList
-            ? iterator_to_array($ast->definitions->getIterator())
-            : $ast->definitions;
-        $extensionDefs = array_filter($definitions, static function (DefinitionNode $def) : bool {
+        $definitions   = Utils::toArray($ast->definitions);
+        $extensionDefs = array_filter($definitions, static function (DefinitionNode $def): bool {
             return $def instanceof ObjectTypeExtensionNode ||
                 $def instanceof InterfaceTypeExtensionNode ||
                 $def instanceof InputObjectTypeExtensionNode ||
@@ -32,7 +31,8 @@ class ExtractExtensionDefinitions
         });
 
         $extensionAst              = clone$ast;
-        $extensionAst->definitions = array_values($extensionDefs);
+        $extensionAst->definitions = new NodeList(array_values($extensionDefs));
+
         return $extensionAst;
     }
 }
