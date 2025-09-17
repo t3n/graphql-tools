@@ -1,4 +1,5 @@
 {
+    "abandoned": "oniva/graphql-tools",
     "name": "t3n/graphql-tools",
     "description": "A PHP port of apollo graphQL-tools",
     "type": "library",
